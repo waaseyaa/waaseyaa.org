@@ -1,0 +1,64 @@
+# waaseyaa.org - included via import in main /etc/caddy/Caddyfile
+# Deploy path: ~/waaseyaa-org, current release: ~/waaseyaa-org/current
+
+waaseyaa.org {
+  tls {
+    issuer acme {
+    }
+  }
+
+  root * /home/deployer/waaseyaa-org/current/public
+
+  encode gzip zstd
+
+  @css {
+    path /css/*
+  }
+  handle @css {
+    header Cache-Control "public, max-age=31536000, immutable"
+    file_server
+  }
+
+  @js {
+    path /js/*
+  }
+  handle @js {
+    header Cache-Control "public, max-age=31536000, immutable"
+    file_server
+  }
+
+  @images {
+    path /img/*
+  }
+  handle @images {
+    header Cache-Control "public, max-age=31536000, immutable"
+    file_server
+  }
+
+  @ico {
+    path *.ico
+  }
+  handle @ico {
+    header Cache-Control "public, max-age=31536000, immutable"
+    file_server
+  }
+
+  @robots {
+    path /robots.txt
+  }
+  handle @robots {
+    header Cache-Control "public, max-age=3600"
+    file_server
+  }
+
+  file_server
+  php_fastcgi * unix//run/php/php8.4-fpm.sock {
+    resolve_root_symlink
+  }
+
+  log {
+    output file /home/deployer/waaseyaa-org/log/access.log {
+      mode 0644
+    }
+  }
+}
