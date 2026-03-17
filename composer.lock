@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1479bbfc3bd515bda51a1a2c78b49a7a",
+    "content-hash": "fea6273735fa40eae9f5767f2e417244",
     "packages": [
         {
             "name": "doctrine/dbal",
@@ -3041,36 +3041,6 @@
             }
         },
         {
-            "name": "waaseyaa/github",
-            "version": "dev-main",
-            "dist": {
-                "type": "path",
-                "url": "../waaseyaa/packages/github",
-                "reference": "d7ef994f8ece644d6ae9a46b9866dabc98196e22"
-            },
-            "require": {
-                "php": ">=8.4"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Waaseyaa\\GitHub\\": "src/"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Waaseyaa\\GitHub\\Tests\\": "tests/"
-                }
-            },
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "description": "GitHub API client for issues, milestones, and pull requests",
-            "transport-options": {
-                "relative": true
-            }
-        },
-        {
             "name": "waaseyaa/graphql",
             "version": "dev-main",
             "dist": {
@@ -4044,7 +4014,6 @@
         "waaseyaa/entity-storage": 20,
         "waaseyaa/field": 20,
         "waaseyaa/foundation": 20,
-        "waaseyaa/github": 20,
         "waaseyaa/graphql": 20,
         "waaseyaa/i18n": 20,
         "waaseyaa/mcp": 20,
