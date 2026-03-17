@@ -1,0 +1,34 @@
+{
+    "name": "waaseyaa/waaseyaa.org",
+    "description": "Marketing site for the Waaseyaa PHP CMS framework",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.4",
+        "waaseyaa/config": "^0.1@dev",
+        "waaseyaa/foundation": "^0.1@dev",
+        "waaseyaa/routing": "^0.1@dev",
+        "waaseyaa/ssr": "^0.1@dev"
+    },
+    "repositories": [
+        {"type": "path", "url": "../waaseyaa/packages/*"}
+    ],
+    "autoload": {
+        "psr-4": {
+            "WaaseyaaOrg\\": "src/"
+        }
+    },
+    "extra": {
+        "waaseyaa": {
+            "providers": [
+                "WaaseyaaOrg\\Provider\\SiteServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
