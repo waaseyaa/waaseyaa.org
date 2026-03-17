@@ -106,6 +106,15 @@ main {
     color: var(--color-accent);
 }
 
+.nav-discord {
+    color: #5865F2 !important;
+    font-weight: 600;
+}
+
+.nav-discord:hover {
+    color: #4752c4 !important;
+}
+
 /* --- Hero --- */
 .hero {
     text-align: center;
