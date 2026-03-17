@@ -1,0 +1,66 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Features{% endblock %}
+{% block description %}Explore Waaseyaa's architecture: 7 layers, 43 packages, entity/field model, access control, auto-generated APIs, and AI-native packages.{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Features</h1>
+    <p>43 packages across 7 architecture layers, each available as a standalone Composer package on Packagist.</p>
+</section>
+
+<section class="architecture">
+    <h2>Architecture Layers</h2>
+    <div class="layer-stack">
+        <div class="layer layer-7"><span class="layer-num">7</span> Application &mdash; full app bootstrap, CLI, deployment</div>
+        <div class="layer layer-6"><span class="layer-num">6</span> API &amp; Serialization &mdash; JSON:API, GraphQL, normalization</div>
+        <div class="layer layer-5"><span class="layer-num">5</span> Node &amp; Routing &mdash; content nodes, URL routing, menus</div>
+        <div class="layer layer-4"><span class="layer-num">4</span> Access &amp; Taxonomy &mdash; permissions, roles, vocabularies</div>
+        <div class="layer layer-3"><span class="layer-num">3</span> Entity &mdash; entity types, bundles, storage handlers</div>
+        <div class="layer layer-2"><span class="layer-num">2</span> Field &amp; Storage &mdash; typed fields, schemas, database abstraction</div>
+        <div class="layer layer-1"><span class="layer-num">1</span> Foundation &mdash; dependency injection, events, configuration</div>
+    </div>
+</section>
+
+<section class="capability">
+    <h2>Entity System</h2>
+    <p>At the core of Waaseyaa is a Drupal-inspired entity/field model, rebuilt from scratch for modern PHP. Entities are typed, fieldable content objects. Fields are self-describing value objects with validation, serialization, and storage built in.</p>
+    <ul>
+        <li><strong>EntityInterface</strong> &mdash; base contract for all content objects</li>
+        <li><strong>FieldDefinition</strong> &mdash; typed field declarations with constraints</li>
+        <li><strong>Revisions</strong> &mdash; built-in content versioning</li>
+        <li><strong>Translations</strong> &mdash; multilingual content from the ground up</li>
+    </ul>
+</section>
+
+<section class="capability">
+    <h2>Access Control</h2>
+    <p>Security follows a deny-unless-granted model. Every operation on every entity and field is denied by default. Access is granted through explicit policies, evaluated at both the entity and field level.</p>
+    <ul>
+        <li><strong>AccessPolicy</strong> &mdash; declare who can do what, on which entities</li>
+        <li><strong>Field-level permissions</strong> &mdash; control read/write access per field</li>
+        <li><strong>Role hierarchy</strong> &mdash; composable roles with inheritance</li>
+    </ul>
+</section>
+
+<section class="capability">
+    <h2>API Layer</h2>
+    <p>Define an entity type and Waaseyaa auto-generates full CRUD endpoints in both JSON:API and GraphQL formats. No controllers to write, no routes to register.</p>
+    <ul>
+        <li><strong>JSON:API</strong> &mdash; spec-compliant, with filtering, sorting, pagination, and includes</li>
+        <li><strong>GraphQL</strong> &mdash; auto-generated schema with queries and mutations</li>
+        <li><strong>Normalizers</strong> &mdash; customizable serialization per entity type</li>
+    </ul>
+</section>
+
+<section class="capability">
+    <h2>AI Packages</h2>
+    <p>AI is not bolted on. Waaseyaa ships dedicated packages that treat AI as infrastructure, not a feature.</p>
+    <ul>
+        <li><strong>ai-schema</strong> &mdash; extract structured schemas from entity definitions for LLM consumption</li>
+        <li><strong>ai-agent</strong> &mdash; build tool-using agents that operate on your entity model</li>
+        <li><strong>ai-pipeline</strong> &mdash; composable processing pipelines for content enrichment</li>
+        <li><strong>ai-vector</strong> &mdash; vector embeddings and similarity search for entities</li>
+    </ul>
+</section>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html.twig" %}
+
+{% block title %}About{% endblock %}
+{% block description %}Learn about Waaseyaa — its Anishinaabe roots, why it was built, and the developer behind it.{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>About Waaseyaa</h1>
+</section>
+
+<section class="content-section">
+    <h2>The Name</h2>
+    <p><strong>Waaseyaa</strong> is an Anishinaabe word meaning "it is bright" or "there is light." The name reflects the project's goal: to bring clarity and illumination to how we build content platforms with PHP.</p>
+</section>
+
+<section class="content-section">
+    <h2>Why Waaseyaa Exists</h2>
+    <p>Drupal proved that an entity/field model is a powerful way to manage structured content. But decades of legacy constraints, global functions, and procedural hooks have made it difficult to evolve. Modern PHP &mdash; with attributes, enums, fibers, typed properties, and mature dependency injection &mdash; deserves a fresh foundation.</p>
+    <p>Waaseyaa takes the architectural ideas that worked (entities, fields, typed storage, access policies) and rebuilds them on Symfony components with clean interfaces, no global state, and zero legacy baggage. The result is 43 focused, composable packages that you can adopt individually or use together as a full CMS framework.</p>
+</section>
+
+<section class="content-section">
+    <h2>Who Built This</h2>
+    <p><strong>Russell Jones</strong> is an Indigenous developer and open source contributor. Waaseyaa grew out of years of working with Drupal and a desire to carry forward its best ideas in a modern codebase.</p>
+    <p>Read the <a href="https://jonesrussell.github.io/blog/waaseyaa-intro/">blog series</a> for the full story of how and why Waaseyaa came to be.</p>
+</section>
+
+<section class="content-section">
+    <h2>Minoo &mdash; The First Application</h2>
+    <p><a href="https://minoo.live">Minoo</a> is the first production application built on Waaseyaa. It is an Indigenous knowledge platform for preserving and sharing cultural heritage &mdash; language, stories, traditional knowledge, and community history.</p>
+    <p>Minoo demonstrates that Waaseyaa can power real applications with complex content models, access control requirements, and multilingual needs.</p>
+</section>
+{% endblock %}

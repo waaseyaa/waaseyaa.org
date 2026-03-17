@@ -1,0 +1,39 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Waaseyaa{% endblock %}
+{% block description %}Waaseyaa is an entity-first, AI-native PHP framework built on Symfony components. Build modern content platforms with 43 composable packages.{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Waaseyaa</h1>
+    <p class="hero-tagline">Entity-first, AI-native PHP framework built on Symfony components</p>
+    <div class="hero-actions">
+        <a href="https://github.com/waaseyaa/framework" class="btn btn-primary">View on GitHub</a>
+        <a href="/getting-started" class="btn btn-secondary">Get Started</a>
+    </div>
+</section>
+
+<section class="features-grid">
+    <div class="card">
+        <h3>Entity System</h3>
+        <p>Drupal-inspired entity/field model with typed fields, revisions, and translations. Define your content model in code, not configuration.</p>
+    </div>
+    <div class="card">
+        <h3>Access Control</h3>
+        <p>Deny-unless-granted model with field-level permissions. Every operation is denied by default until explicitly permitted.</p>
+    </div>
+    <div class="card">
+        <h3>JSON:API + GraphQL</h3>
+        <p>Zero-config CRUD auto-generated from your entity types. Define an entity, get a full API for free.</p>
+    </div>
+    <div class="card">
+        <h3>AI Native</h3>
+        <p>Built-in packages for schema extraction, agents, pipelines, and vector embeddings. AI is a first-class citizen, not an afterthought.</p>
+    </div>
+</section>
+
+<section class="see-it">
+    <h2>See it in action</h2>
+    <p><a href="https://minoo.live">Minoo</a> is the first application built on Waaseyaa &mdash; an Indigenous knowledge platform preserving and sharing cultural heritage.</p>
+</section>
+{% endblock %}

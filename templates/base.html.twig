@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Waaseyaa{% endblock %} — Entity-first PHP Framework</title>
+    <meta name="description" content="{% block description %}Waaseyaa is an entity-first, AI-native PHP framework built on Symfony components. 43 packages for building modern content platforms.{% endblock %}">
+    <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+    <nav class="site-nav">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand">Waaseyaa</a>
+            <ul class="nav-links">
+                <li><a href="/" {% if path == '/' %}class="active"{% endif %}>Home</a></li>
+                <li><a href="/features" {% if path == '/features' %}class="active"{% endif %}>Features</a></li>
+                <li><a href="/getting-started" {% if path == '/getting-started' %}class="active"{% endif %}>Getting Started</a></li>
+                <li><a href="/about" {% if path == '/about' %}class="active"{% endif %}>About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <p>Built with Waaseyaa &mdash; <a href="https://github.com/waaseyaa/framework">GitHub</a></p>
+            <p class="footer-copy">&copy; {{ "now"|date("Y") }} Russell Jones</p>
+        </div>
+    </footer>
+</body>
+</html>
