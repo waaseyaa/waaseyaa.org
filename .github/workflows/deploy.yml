@@ -27,7 +27,6 @@ jobs:
           repository: waaseyaa/framework
           ref: develop/v1.1
           path: waaseyaa
-          token: ${{ secrets.WAASEYAA_PAT }}
 
       - name: Set up PHP 8.4
         uses: shivammathur/setup-php@v2
