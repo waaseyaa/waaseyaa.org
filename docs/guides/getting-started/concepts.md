@@ -7,15 +7,15 @@ description: Understanding entities, fields, service providers, and the kernel l
 
 # Core Concepts
 
-This guide covers the foundational concepts that every Waaseyaa developer needs to understand: the entity/field model, service providers, the kernel lifecycle, and the package system.
+This guide covers the foundational concepts every Waaseyaa developer needs: the entity/field model, service providers, the kernel lifecycle, and the package system.
 
 ## The Entity/Field Model
 
-Waaseyaa's content model is inspired by Drupal but rebuilt with modern PHP. Every piece of structured content — articles, users, taxonomy terms, media — is an **entity**.
+Waaseyaa's content model is inspired by Drupal but rebuilt with modern PHP. Every piece of structured content is an **entity**. Articles, users, taxonomy terms, media. All entities.
 
 ### Entity Types
 
-An entity type is a definition that describes a class of entities. It is represented by the `EntityType` value object:
+An entity type is a definition that describes a class of entities. You define it with the `EntityType` value object:
 
 ```php
 use Waaseyaa\Entity\EntityType;
@@ -41,6 +41,8 @@ $articleType = new EntityType(
 );
 ```
 
+This defines an article entity type with revision tracking, translation support, and two fields.
+
 Key properties:
 
 | Property | Purpose |
@@ -55,10 +57,10 @@ Key properties:
 
 ### Content Entities vs Config Entities
 
-Waaseyaa distinguishes two kinds of entities:
+Waaseyaa has two kinds of entities:
 
-- **Content entities** (`ContentEntityBase`) — User-created content like articles, comments, media. They are fieldable, potentially revisionable and translatable.
-- **Config entities** (`ConfigEntityBase`) — Site configuration like content types, vocabularies, workflows. They are exported to YAML and synced between environments.
+- **Content entities** (`ContentEntityBase`) store user-created content like articles, comments, and media. They are fieldable, potentially revisionable, and translatable.
+- **Config entities** (`ConfigEntityBase`) store site configuration like content types, vocabularies, and workflows. They are exported to YAML and synced between environments.
 
 ```php
 // Content entity: stores user content
@@ -76,6 +78,8 @@ class ArticleType extends ConfigEntityBase
 }
 ```
 
+Content entities use auto-increment integer IDs. Config entities use string IDs and are exported/imported through the config sync system.
+
 ### Fields and Typed Data
 
 Every content entity implements `FieldableInterface`, giving it dynamic, typed fields:
@@ -90,7 +94,9 @@ interface FieldableInterface
 }
 ```
 
-The `waaseyaa/field` package provides the field type system. Built-in field types include:
+This interface is how you read and write field values on any content entity.
+
+The `waaseyaa/field` package provides the field type system. Built-in field types:
 
 | Field Type | Class | Description |
 |---|---|---|
@@ -113,11 +119,11 @@ interface FieldTypeInterface
 }
 ```
 
-The `jsonSchema()` method is particularly important: it enables the AI packages to automatically generate JSON Schema definitions from your entity fields.
+The `jsonSchema()` method is what enables the AI packages to automatically generate JSON Schema definitions from your entity fields.
 
 ### Entity Lifecycle
 
-Entities are managed through storage handlers. The typical lifecycle is:
+You manage entities through storage handlers. Here is the typical lifecycle:
 
 ```php
 // Get the storage handler for an entity type
@@ -191,6 +197,8 @@ class ArticleServiceProvider extends ServiceProvider
 }
 ```
 
+Each method has a specific role in the boot sequence. The `register()` method binds services. The `boot()` method runs after all providers are registered.
+
 ### Lifecycle Methods
 
 | Method | When It Runs | Purpose |
@@ -219,12 +227,14 @@ public function register(): void
 }
 ```
 
+Singletons are resolved once and reused. Bindings create a fresh instance on every call. Tags group related services so you can retrieve them all at once.
+
 ## The Kernel Lifecycle
 
 The kernel is the entry point for every request. Waaseyaa provides two kernels:
 
-- **`HttpKernel`** — Handles web requests (`public/index.php`)
-- **`ConsoleKernel`** — Handles CLI commands (`bin/waaseyaa`)
+- **`HttpKernel`** handles web requests (`public/index.php`)
+- **`ConsoleKernel`** handles CLI commands (`bin/waaseyaa`)
 
 Both extend `AbstractKernel` from the `waaseyaa/foundation` package.
 
@@ -243,6 +253,8 @@ Both extend `AbstractKernel` from the `waaseyaa/foundation` package.
 10. Controller method executes and returns Response
 11. Response sent to the client
 ```
+
+This sequence runs on every HTTP request. Steps 2-5 are cached after the first boot when you run `optimize:manifest`.
 
 ### Boot Optimization
 
@@ -269,23 +281,23 @@ Layer 2 (Services)   depends on: Layers 0-1
 ...and so on
 ```
 
+This strict layering prevents circular dependencies and keeps the architecture clean.
+
 ### Composability
 
-You can install only the packages you need. If you only need entities and routing without AI or SSR, install `waaseyaa/core`. If you need everything, install `waaseyaa/full`.
+You install only the packages you need. If you only need entities and routing without AI or SSR, install `waaseyaa/core`. If you need everything, install `waaseyaa/full`.
 
 ### Package Interfaces
 
-Every package exposes its public API through interfaces. For example:
+Every package exposes its public API through interfaces:
 
 - `EntityTypeManagerInterface` — not `EntityTypeManager`
 - `ConfigFactoryInterface` — not `ConfigFactory`
 - `AccessPolicyInterface` — not a concrete policy class
 
-This means you can swap implementations for testing (using in-memory backends) or extend behavior without touching framework internals.
+You can swap implementations for testing (using in-memory backends) or extend behavior without touching framework internals.
 
 ## Next Steps
-
-Now that you understand the core concepts:
 
 - **[Entity System](../core/entity-system.md)** — Deep dive into entity types, revisions, and translations
 - **[Routing Guide](../core/routing.md)** — The RouteBuilder API, middleware, and access control

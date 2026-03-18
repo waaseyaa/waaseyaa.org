@@ -1,7 +1,7 @@
 {% extends "base.html.twig" %}
 
 {% block title %}Waaseyaa{% endblock %}
-{% block description %}Waaseyaa is an entity-first, AI-native PHP framework built on Symfony components. Build modern content platforms with 43 composable packages.{% endblock %}
+{% block description %}Waaseyaa is an entity-first, AI-native PHP framework built on Symfony components. 43 composable packages for building content platforms.{% endblock %}
 
 {% block content %}
 <section class="hero">
@@ -10,31 +10,31 @@
     <div class="hero-actions">
         <a href="https://discord.gg/ZzQNhrBb7U" class="btn btn-primary">Join Discord</a>
         <a href="https://github.com/waaseyaa/framework" class="btn btn-secondary">View on GitHub</a>
-        <a href="/getting-started" class="btn btn-secondary">Get Started</a>
+        <a href="/docs" class="btn btn-secondary">Read the Docs</a>
     </div>
 </section>
 
 <section class="features-grid">
     <div class="card">
         <h3>Entity System</h3>
-        <p>Drupal-inspired entity/field model with typed fields, revisions, and translations. Define your content model in code, not configuration.</p>
+        <p>Drupal's entity/field model, rebuilt for PHP 8.4. You define your content model in code with typed fields, revisions, and translations.</p>
     </div>
     <div class="card">
         <h3>Access Control</h3>
-        <p>Deny-unless-granted model with field-level permissions. Every operation is denied by default until explicitly permitted.</p>
+        <p>Deny-unless-granted. Every operation on every entity and field is denied by default until a policy explicitly permits it.</p>
     </div>
     <div class="card">
         <h3>JSON:API + GraphQL</h3>
-        <p>Zero-config CRUD auto-generated from your entity types. Define an entity, get a full API for free.</p>
+        <p>Define an entity type, get full CRUD endpoints. Zero-config JSON:API and GraphQL auto-generated from your entity definitions.</p>
     </div>
     <div class="card">
         <h3>AI Native</h3>
-        <p>Built-in packages for schema extraction, agents, pipelines, and vector embeddings. AI is a first-class citizen, not an afterthought.</p>
+        <p>AI is not bolted on. Four dedicated packages handle schema extraction, agent orchestration, processing pipelines, and vector search.</p>
     </div>
 </section>
 
 <section class="see-it">
     <h2>See it in action</h2>
-    <p><a href="https://minoo.live">Minoo</a> is the first application built on Waaseyaa &mdash; an Indigenous knowledge platform preserving and sharing cultural heritage.</p>
+    <p><a href="https://minoo.live">Minoo</a> is the first application built on Waaseyaa. It's an Indigenous knowledge platform for preserving and sharing cultural heritage.</p>
 </section>
 {% endblock %}

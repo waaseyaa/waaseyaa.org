@@ -7,11 +7,11 @@ description: Route definitions, controllers, middleware, and URL generation
 
 # Routing Guide
 
-The `waaseyaa/routing` package wraps Symfony Routing with a fluent `RouteBuilder` API and adds Waaseyaa-specific features: route-level access control, entity parameter upcasting, and language negotiation middleware.
+The `waaseyaa/routing` package wraps Symfony Routing with a fluent `RouteBuilder` API. It adds route-level access control, entity parameter upcasting, and language negotiation middleware.
 
 ## RouteBuilder Fluent API
 
-Routes are defined using the `RouteBuilder` class. It provides a clean, chainable interface for building Symfony `Route` objects:
+You define routes using the `RouteBuilder` class. It provides a chainable interface for building Symfony `Route` objects:
 
 ```php
 use Waaseyaa\Routing\RouteBuilder;
@@ -24,7 +24,9 @@ $route = RouteBuilder::create('/articles/{article}')
     ->build();
 ```
 
-### Creating Routes
+This creates a route that loads an article entity from the URL, checks the `access content` permission, and calls the `view` method on `ArticleController`.
+
+### Create Routes
 
 Every route starts with `RouteBuilder::create()` and ends with `->build()`:
 
@@ -50,6 +52,8 @@ $api = RouteBuilder::create('/api/articles/{article}')
     ->build();
 ```
 
+Each example shows a different pattern: a static page, an entity view page, and a multi-method API endpoint.
+
 ### Available Builder Methods
 
 | Method | Purpose |
@@ -67,9 +71,9 @@ $api = RouteBuilder::create('/api/articles/{article}')
 | `jsonApi()` | Mark as a JSON:API route |
 | `build()` | Build and return the Symfony Route object |
 
-## Registering Routes
+## Register Routes in Service Providers
 
-Routes are registered in service providers through the `routes()` method:
+You register routes in service providers through the `routes()` method:
 
 ```php
 use Waaseyaa\Foundation\ServiceProvider\ServiceProvider;
@@ -110,7 +114,7 @@ The first argument to `addRoute()` is a unique route name used for URL generatio
 
 ## Entity Parameter Upcasting
 
-One of the most powerful routing features is automatic entity loading. When you call `entityParameter()`, the router automatically:
+When you call `entityParameter()`, the router automatically:
 
 1. Extracts the parameter value from the URL
 2. Loads the entity from storage
@@ -139,7 +143,7 @@ The parameter name in the route path (`{article}`) must match the parameter name
 
 ## Route-Level Access Control
 
-Waaseyaa integrates access control directly into route definitions using four access options:
+Waaseyaa integrates access control directly into route definitions.
 
 ### Public Routes
 
@@ -152,6 +156,8 @@ RouteBuilder::create('/about')
     ->build();
 ```
 
+Use this for pages that anyone can view without authentication.
+
 ### Permission-Based Access
 
 Require a specific permission string:
@@ -162,6 +168,8 @@ RouteBuilder::create('/admin/articles')
     ->requirePermission('administer content')
     ->build();
 ```
+
+The framework checks whether the current user has the `administer content` permission before executing the controller.
 
 ### Role-Based Access
 
@@ -174,6 +182,8 @@ RouteBuilder::create('/admin/settings')
     ->build();
 ```
 
+Only users with the `administrator` role can access this route.
+
 ### Authentication Required
 
 Require any authenticated user without checking specific permissions:
@@ -185,6 +195,8 @@ RouteBuilder::create('/dashboard')
     ->build();
 ```
 
+Any logged-in user can access this route. Anonymous users get a 401 response.
+
 ### How Access Is Evaluated
 
 The `AccessChecker` evaluates route access options in order:
@@ -193,9 +205,9 @@ The `AccessChecker` evaluates route access options in order:
 2. If `_permission` is set, the user must have that permission
 3. If `_role` is set, the user must have that role
 4. If `_gate` is set, a custom gate callback is invoked
-5. If none of the above are set, access is denied by default (deny-unless-granted)
+5. If none of the above are set, access is denied by default
 
-This is a **deny-by-default** model. If you forget to add access options to a route, it will be inaccessible. This is a safety feature.
+This is a **deny-by-default** model. If you forget to add access options to a route, it will be inaccessible. This is intentional.
 
 ## Controller Method Signatures
 
@@ -226,9 +238,11 @@ class ArticleController
 }
 ```
 
+Constructor parameters come from the service container. Method parameters come from the route match (entity upcasting) or the Symfony `Request` object.
+
 ## Language Negotiation Middleware
 
-The routing package includes two language negotiation strategies:
+The routing package includes two language negotiation strategies.
 
 ### URL Prefix Negotiation
 
@@ -261,6 +275,8 @@ RouteBuilder::create('/api/webhook')
     ->csrfExempt()
     ->build();
 ```
+
+This exempts the webhook endpoint from CSRF checks because it uses its own authentication.
 
 The `csrf_token()` Twig function is available in templates when the User middleware is active.
 

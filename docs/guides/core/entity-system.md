@@ -7,11 +7,11 @@ description: Deep dive into entities, typed fields, revisions, and translations
 
 # Entity System
 
-The entity system is the heart of Waaseyaa. It provides a structured, typed content model with support for revisions, translations, and dynamic fields. This guide covers the `waaseyaa/entity` and `waaseyaa/field` packages in depth.
+The entity system is the heart of Waaseyaa. It provides a structured, typed content model with revisions, translations, and dynamic fields. This guide covers the `waaseyaa/entity` and `waaseyaa/field` packages in depth.
 
 ## Entity Type Definitions
 
-Every entity in Waaseyaa is described by an `EntityType` — a readonly value object that declares the entity's structure and capabilities:
+Every entity in Waaseyaa is described by an `EntityType`. This is a readonly value object that declares the entity's structure and capabilities:
 
 ```php
 use Waaseyaa\Entity\EntityType;
@@ -41,6 +41,8 @@ new EntityType(
 );
 ```
 
+This defines an article entity type with revision tracking, translations, bundles, and three fields.
+
 ### Entity Keys
 
 The `keys` array maps logical roles to column names:
@@ -58,7 +60,7 @@ Not all keys are required. A simple entity may only need `id`, `uuid`, and `labe
 
 ## Entity Base Classes
 
-Waaseyaa provides three base classes for entities:
+Waaseyaa provides three base classes for entities.
 
 ### EntityBase
 
@@ -99,11 +101,11 @@ abstract class ContentEntityBase extends EntityBase
 }
 ```
 
-A content entity object represents one language at a time. Calling `getTranslation()` returns a separate entity object for the requested language, rather than embedding all translations in a single object.
+A content entity object represents one language at a time. Calling `getTranslation()` returns a separate entity object for the requested language rather than embedding all translations in a single object.
 
 ### ConfigEntityBase
 
-Extends `EntityBase` for configuration entities. Config entities are exported to YAML and can be synced between environments:
+Extends `EntityBase` for configuration entities. Config entities are exported to YAML and synced between environments:
 
 ```php
 abstract class ConfigEntityBase extends EntityBase
@@ -113,6 +115,8 @@ abstract class ConfigEntityBase extends EntityBase
     // They are exported and imported via the config sync system.
 }
 ```
+
+Config entities use string IDs because they need to be referenced by name across environments.
 
 ## Field Types
 
@@ -135,6 +139,8 @@ interface FieldTypeInterface
 }
 ```
 
+Each method serves a specific purpose: `schema()` defines database columns, `defaultSettings()` provides field configuration defaults, `defaultValue()` sets initial values, and `jsonSchema()` enables API and AI integration.
+
 ### Built-in Field Types
 
 | Type | Item Class | Schema Type | Description |
@@ -150,9 +156,9 @@ interface FieldTypeInterface
 
 Fields are accessed through a layered API:
 
-- **`FieldItemInterface`** — A single field value (e.g., one string value)
-- **`FieldItemList`** — A list of field items (supports multi-value fields)
-- **`FieldDefinition`** — Metadata about the field (type, label, required, settings)
+- **`FieldItemInterface`** is a single field value (e.g., one string value)
+- **`FieldItemList`** is a list of field items (supports multi-value fields)
+- **`FieldDefinition`** is metadata about the field (type, label, required, settings)
 
 ```php
 // Access a field value directly
@@ -167,9 +173,11 @@ if ($article->hasField('category')) {
 }
 ```
 
-### Defining Fields on Entity Types
+These methods work on any content entity. The field system validates types at the storage layer.
 
-Fields are declared in the `fieldDefinitions` parameter of `EntityType`:
+### Define Fields on Entity Types
+
+You declare fields in the `fieldDefinitions` parameter of `EntityType`:
 
 ```php
 'fieldDefinitions' => [
@@ -197,9 +205,11 @@ Fields are declared in the `fieldDefinitions` parameter of `EntityType`:
 ],
 ```
 
+Each field definition specifies a type, a label, and optional constraints like `required`.
+
 ## Entity Storage
 
-The `waaseyaa/entity-storage` package provides SQL-backed storage for entities. Storage handlers are accessed through the `EntityTypeManager`:
+The `waaseyaa/entity-storage` package provides SQL-backed storage for entities. You access storage handlers through the `EntityTypeManager`:
 
 ```php
 // Get the storage handler
@@ -212,7 +222,9 @@ $storage->save($article);
 $storage->delete($article);
 ```
 
-### Saving New vs Existing Entities
+These four operations cover the full entity lifecycle: load, load multiple, save, and delete.
+
+### Save New vs Existing Entities
 
 When saving an entity, the storage handler checks whether it already has an ID:
 
@@ -227,13 +239,17 @@ $article->enforceIsNew();
 $storage->save($article); // Forces INSERT
 ```
 
+This is useful when importing data with known IDs from another system.
+
 ### Schema Management
 
-The entity storage package manages database schema automatically. When you add a new entity type or modify field definitions, the CLI creates or updates tables:
+The entity storage package manages database schema automatically. When you add a new entity type or modify field definitions, run the CLI to create or update tables:
 
 ```bash
 bin/waaseyaa entity:create
 ```
+
+This reads all registered entity type definitions and creates the corresponding database tables.
 
 ## Revisions
 
@@ -258,7 +274,7 @@ Revisionable entities implement `RevisionableInterface`, providing access to rev
 
 ## Translations
 
-Entity types with `translatable: true` support multiple languages. Each translation is represented as a separate entity object:
+Entity types with `translatable: true` support multiple languages. Each translation is a separate entity object:
 
 ```php
 new EntityType(
@@ -279,7 +295,7 @@ Translatable entities implement `TranslatableInterface`. The language is negotia
 
 ## The EntityTypeManager
 
-The `EntityTypeManager` is the central registry for all entity types. It provides:
+The `EntityTypeManager` is the central registry for all entity types:
 
 ```php
 interface EntityTypeManagerInterface
@@ -295,7 +311,9 @@ interface EntityTypeManagerInterface
 }
 ```
 
-Service providers can register entity types using the `entityType()` helper method:
+You use this interface to look up entity type definitions, get storage handlers, and list all registered types.
+
+Service providers register entity types using the `entityType()` helper method:
 
 ```php
 public function register(): void
@@ -309,9 +327,11 @@ public function register(): void
 }
 ```
 
+This registers the entity type during the provider's `register()` phase, making it available to the rest of the application.
+
 ## AI Integration
 
-The `jsonSchema()` method on field types is what enables Waaseyaa's AI-native capabilities. The `waaseyaa/ai-schema` package reads entity type definitions and field definitions to automatically generate JSON Schema and MCP tool definitions. This means AI agents can interact with your custom entity types without any additional configuration.
+The `jsonSchema()` method on field types is what enables Waaseyaa's AI-native capabilities. The `waaseyaa/ai-schema` package reads entity type definitions and field definitions to automatically generate JSON Schema and MCP tool definitions. AI agents can interact with your custom entity types without any additional configuration.
 
 See the [AI Overview](../ai/ai-overview.md) for details on how the AI packages work together.
 

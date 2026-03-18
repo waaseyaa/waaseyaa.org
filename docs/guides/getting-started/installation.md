@@ -11,20 +11,22 @@ This guide walks you through creating a new Waaseyaa project from the official s
 
 ## Prerequisites
 
-Before you begin, make sure you have:
+You need:
 
-- **PHP 8.3+** with the following extensions: `pdo_sqlite`, `mbstring`, `json`, `openssl`
+- **PHP 8.4+** with extensions: `pdo_sqlite`, `mbstring`, `json`, `openssl`
 - **Composer 2.x** ([getcomposer.org](https://getcomposer.org))
-- **SQLite 3** (used as the default database)
+- **SQLite 3** (the default database)
 
 Verify your PHP version:
 
 ```bash
 php -v
-# PHP 8.3.x or higher required
+# PHP 8.4.x or higher required
 ```
 
-## Creating a New Project
+This confirms PHP is installed and meets the minimum version requirement.
+
+## Create a New Project
 
 Use Composer to create a project from the Waaseyaa skeleton:
 
@@ -33,7 +35,7 @@ composer create-project waaseyaa/waaseyaa my-site
 cd my-site
 ```
 
-This installs the skeleton with all core packages including foundation, entity, field, routing, access control, node content types, taxonomy, media, and the CLI.
+This installs the skeleton with all core packages: foundation, entity, field, routing, access control, node content types, taxonomy, media, and the CLI.
 
 ## Project Directory Structure
 
@@ -79,7 +81,7 @@ my-site/
 
 ## Configuration
 
-The main configuration file is `config/waaseyaa.php`. Key settings include:
+The main configuration file is `config/waaseyaa.php`:
 
 ```php
 <?php
@@ -110,7 +112,9 @@ return [
 ];
 ```
 
-Environment variables allow you to override settings per environment without changing the config file:
+This file sets database paths, file storage locations, CORS origins, SSR theme settings, and optional AI configuration.
+
+Environment variables let you override settings per environment without changing the config file:
 
 | Variable | Purpose | Default |
 |---|---|---|
@@ -120,7 +124,7 @@ Environment variables allow you to override settings per environment without cha
 | `WAASEYAA_JWT_SECRET` | JWT signing secret for API auth | (empty) |
 | `WAASEYAA_SSR_THEME` | Active SSR theme package | (empty) |
 
-## Running the Development Server
+## Run the Development Server
 
 Start the built-in development server:
 
@@ -128,11 +132,11 @@ Start the built-in development server:
 bin/waaseyaa serve
 ```
 
-This launches a PHP development server. Visit [http://localhost:8000](http://localhost:8000) to see the default welcome page.
+This launches a PHP development server on port 8000. Visit [http://localhost:8000](http://localhost:8000) to see the default welcome page.
 
-## Verifying the Installation
+## Verify the Installation
 
-### Check the welcome page
+### Check the Welcome Page
 
 Open `http://localhost:8000` in your browser. You should see the Waaseyaa welcome page with links to the admin SPA, API endpoint, and CLI commands.
 
@@ -145,9 +149,11 @@ curl http://localhost:8000/api/note \
   -H "Content-Type: application/vnd.api+json"
 ```
 
-### Create your first content
+This returns a JSON:API response listing notes. The response will be empty until you create content.
 
-Use the CLI to interact with your application:
+### Create Entity Database Tables
+
+Use the CLI to set up storage and verify the installation:
 
 ```bash
 # List available CLI commands
@@ -160,7 +166,9 @@ bin/waaseyaa entity:create
 bin/waaseyaa config:export
 ```
 
-### Create a note via the API
+These commands confirm that the kernel boots, entity types are registered, and the config system works.
+
+### Create a Note via the API
 
 Waaseyaa ships with a built-in `core.note` content type that is always available:
 
@@ -177,6 +185,8 @@ curl -X POST http://localhost:8000/api/note \
     }
   }'
 ```
+
+This creates a note entity through the JSON:API endpoint and returns the created resource.
 
 ## Next Steps
 

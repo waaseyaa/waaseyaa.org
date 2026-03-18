@@ -7,20 +7,20 @@ description: Understanding the deny-unless-granted permission model
 
 # Access Control Guide
 
-The `waaseyaa/access` package provides a permission-based access control system built on a **deny-unless-granted** model. Every operation is denied by default unless an access policy explicitly grants it. This guide covers the access model, policies, field-level permissions, and how to check access in controllers and templates.
+The `waaseyaa/access` package provides permission-based access control built on a **deny-unless-granted** model. Every operation is denied by default unless an access policy explicitly grants it. This guide covers the access model, policies, field-level permissions, and how to check access in controllers and templates.
 
 ## The Access Model
 
 Waaseyaa's access control operates at two levels:
 
-1. **Route-level access** — Evaluated by `AccessChecker` based on route options (`_public`, `_permission`, `_role`, `_gate`)
-2. **Entity-level access** — Evaluated by `AccessGate` using registered `AccessPolicyInterface` implementations
+1. **Route-level access** is evaluated by `AccessChecker` based on route options (`_public`, `_permission`, `_role`, `_gate`)
+2. **Entity-level access** is evaluated by `AccessGate` using registered `AccessPolicyInterface` implementations
 
 Both levels return `AccessResult` values that combine to produce a final access decision.
 
 ## AccessResult
 
-Every access check returns an `AccessResult` — a value object with one of four states:
+Every access check returns an `AccessResult`. It is a value object with one of four states:
 
 ```php
 use Waaseyaa\Access\AccessResult;
@@ -38,9 +38,11 @@ AccessResult::forbidden('User lacks the required permission');
 AccessResult::unauthenticated('No valid session');
 ```
 
-### Combining Results
+Each factory method takes a reason string. This reason is logged and helps with debugging access issues.
 
-Results can be combined with AND and OR logic:
+### Combine Results
+
+You can combine results with AND and OR logic:
 
 ```php
 // AND: both must be allowed
@@ -54,9 +56,9 @@ $result = $checkA->orIf($checkB);
 // Either being Allowed yields Allowed.
 ```
 
-The key rule: **Forbidden and Unauthenticated always win**, regardless of AND or OR combination. This ensures that an explicit denial cannot be overridden by another policy granting access.
+The key rule: **Forbidden and Unauthenticated always win**, regardless of AND or OR combination. An explicit denial cannot be overridden by another policy granting access.
 
-### Checking Results
+### Check Results
 
 ```php
 $result->isAllowed();          // true if Allowed
@@ -67,7 +69,7 @@ $result->isUnauthenticated();  // true if Unauthenticated
 
 ## Access Policies
 
-Access policies define who can perform what operations on entities. They implement `AccessPolicyInterface`:
+Access policies define who can perform what operations on entities. You implement `AccessPolicyInterface`:
 
 ```php
 use Waaseyaa\Access\AccessPolicyInterface;
@@ -120,13 +122,17 @@ class ArticleAccessPolicy implements AccessPolicyInterface
 }
 ```
 
-### Registering Policies
+This policy grants view access to everyone, restricts update and delete to users with the right permissions, and uses `appliesTo()` to scope itself to the `article` entity type only.
+
+### Register Policies
 
 Policies are discovered automatically via the `#[PolicyAttribute]` PHP attribute. The `PackageManifestCompiler` scans your `src/Access/` directory for classes with this attribute. After adding a new policy, rebuild the manifest:
 
 ```bash
 bin/waaseyaa optimize:manifest
 ```
+
+This compiles discovery results into a cached manifest so the framework does not need runtime reflection.
 
 ### The Three Operations
 
@@ -139,11 +145,11 @@ Entity access policies handle three standard operations:
 | `delete` | `access()` | Deleting an entity |
 | (create) | `createAccess()` | Creating a new entity of a type/bundle |
 
-The `access()` method receives the full entity object, so you can make decisions based on entity state (e.g., only the author can edit their own articles).
+The `access()` method receives the full entity object. You can make decisions based on entity state, such as allowing authors to edit only their own articles.
 
 ## Field-Level Access
 
-For fine-grained control, the `FieldAccessPolicyInterface` lets you control access to individual fields:
+For fine-grained control, `FieldAccessPolicyInterface` lets you control access to individual fields:
 
 ```php
 use Waaseyaa\Access\FieldAccessPolicyInterface;
@@ -171,7 +177,7 @@ class ArticleFieldAccessPolicy implements FieldAccessPolicyInterface
 }
 ```
 
-Field-level access is evaluated per-field during entity serialization (API responses) and rendering (templates), ensuring sensitive fields are never leaked.
+Field-level access is evaluated per-field during entity serialization (API responses) and rendering (templates). Sensitive fields are never leaked to unauthorized users.
 
 ## Route-Level Access
 
@@ -199,15 +205,17 @@ RouteBuilder::create('/dashboard')
     ->build();
 ```
 
+Each example shows a different access strategy. Choose the one that fits your route's requirements.
+
 ### Evaluation Order
 
 The `AccessChecker` evaluates route options in this order:
 
-1. `_public: true` — Immediately grants access
-2. `_permission` — Checks the account for a specific permission string
-3. `_role` — Checks the account for a specific role
-4. `_gate` — Invokes a custom gate callback
-5. **Default: denied** — If no option matches, the route is inaccessible
+1. `_public: true` grants access immediately
+2. `_permission` checks the account for a specific permission string
+3. `_role` checks the account for a specific role
+4. `_gate` invokes a custom gate callback
+5. **Default: denied.** If no option matches, the route is inaccessible
 
 This is the deny-unless-granted principle in action. Routes without explicit access options are locked down by default.
 
@@ -227,9 +235,9 @@ interface AccountInterface
 
 The `waaseyaa/user` package provides the concrete `User` entity and session management that populates the account on each request.
 
-## Checking Access in Controllers
+## Check Access in Controllers
 
-In controllers, you can check access programmatically through the `AccessGate`:
+You can check access programmatically through the `AccessGate`:
 
 ```php
 class ArticleController
@@ -254,9 +262,9 @@ class ArticleController
 
 For most cases, route-level access options are sufficient. Use programmatic checks when you need conditional logic that depends on the specific entity being accessed.
 
-## Checking Access in Templates
+## Check Access in Templates
 
-The SSR package makes access checking available in Twig templates. You can conditionally render UI elements based on permissions:
+The SSR package makes access checking available in Twig templates:
 
 ```twig
 {% if account.hasPermission('edit articles') %}
@@ -268,9 +276,11 @@ The SSR package makes access checking available in Twig templates. You can condi
 {% endif %}
 ```
 
+This conditionally renders UI elements based on the current user's permissions or roles.
+
 ## Best Practices
 
-### Use Neutral for Non-Applicable Policies
+### Return Neutral for Non-Applicable Policies
 
 When a policy does not apply to a given operation, return `AccessResult::neutral()` rather than `allowed()` or `forbidden()`. This lets other policies make the decision:
 
@@ -284,9 +294,11 @@ public function access(EntityInterface $entity, string $operation, AccountInterf
 }
 ```
 
+Returning `neutral()` means "this policy has no opinion." Other policies can still grant or deny.
+
 ### Prefer Route-Level Access Over Controller Checks
 
-Route-level access options are evaluated before the controller executes, which means:
+Route-level access options are evaluated before the controller executes:
 
 - The controller never runs for unauthorized requests
 - No risk of forgetting to check access in the controller body
@@ -305,6 +317,8 @@ public function access(EntityInterface $entity, string $operation, AccountInterf
     return AccessResult::neutral();
 }
 ```
+
+This grants update access when the current user is the entity's author. Other users fall through to other policies.
 
 ## Next Steps
 

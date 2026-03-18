@@ -5,30 +5,30 @@ order: 1
 description: What Waaseyaa is, who it's for, and the philosophy behind the framework
 ---
 
-# Introduction to Waaseyaa
+# What Is Waaseyaa
 
-Waaseyaa is a modern, entity-first, AI-native content management system built on PHP 8.3+ and Symfony 7. It replaces Drupal's legacy runtime with a clean, modular architecture organized as independent Composer packages.
+Waaseyaa is an entity-first, AI-native content management system. It runs on PHP 8.4+ and Symfony 7. It replaces Drupal's legacy runtime with a clean, modular architecture organized as independent Composer packages.
 
-Every subsystem — entities, fields, config, caching, routing, access control — is a standalone package with explicit interfaces, no global state, and no hidden coupling.
+Every subsystem is a standalone package. Entities, fields, config, caching, routing, access control. Each has explicit interfaces, no global state, and no hidden coupling.
 
-## Who Is Waaseyaa For?
+## Who Waaseyaa Is For
 
-Waaseyaa is designed for developers building:
+You should use Waaseyaa if you are building:
 
 - **Content platforms** that need structured, typed content with revisions and translations
 - **CMS-like applications** where content modeling is a first-class concern
 - **AI-powered applications** that need structured tool calls, vector search, and inference pipelines
 - **API-first backends** with JSON:API and GraphQL endpoints generated from entity definitions
 
-If you have experience with Drupal's content model and want that power with modern PHP practices, Waaseyaa gives you exactly that — without the legacy baggage.
+If you know Drupal's content model and want that same capability with modern PHP, Waaseyaa gives you that. No legacy baggage.
 
-## Philosophy
+## Design Principles
 
-Waaseyaa is built on five key design principles:
+Waaseyaa is built on five principles.
 
 ### No Global State
 
-Every service receives its dependencies through constructor injection. There are no service locators, no static registries, and no hidden singletons.
+Every service receives its dependencies through constructor injection. No service locators, no static registries, no hidden singletons.
 
 ### Interface-First
 
@@ -40,11 +40,11 @@ Every subsystem has in-memory implementations for fast, isolated testing. You ca
 
 ### Layered Architecture
 
-The framework is organized into strict architectural layers. Each layer only depends on layers below it. There are no circular dependencies.
+The framework is organized into strict architectural layers. Each layer only depends on layers below it. No circular dependencies.
 
 ### AI-Native
 
-Entity schemas automatically generate MCP tools, enabling AI agents to create, read, update, and query content through structured tool calls. AI is not an afterthought — it is woven into the architecture.
+Entity schemas automatically generate MCP tools. AI agents can create, read, update, and query content through structured tool calls. AI is built into the architecture, not bolted on.
 
 ## Package Architecture
 
@@ -60,6 +60,8 @@ Layer 1  Core Data      config, entity, field, entity-storage, database-legacy
 Layer 0  Foundation     cache, plugin, typed-data
 ```
 
+This diagram shows the layer hierarchy. A package at Layer 3 can depend on Layers 0 through 2 but never on Layer 4 or above.
+
 Three meta-packages provide convenient installation:
 
 | Meta-Package | Contents | Packages |
@@ -68,7 +70,7 @@ Three meta-packages provide convenient installation:
 | `waaseyaa/cms` | Core + Content Types + API + CLI | 23 packages |
 | `waaseyaa/full` | CMS + AI + GraphQL + SSR | 29 packages |
 
-### Key Packages at a Glance
+### Key Packages
 
 | Package | Purpose |
 |---|---|
@@ -84,11 +86,11 @@ Three meta-packages provide convenient installation:
 
 ## How waaseyaa.org Is Built
 
-This documentation site itself is built with Waaseyaa. It uses the SSR package for server-side rendering, the entity system for content management, and the same routing and access control packages available to every Waaseyaa application. This means every feature documented here is also demonstrated in production by the site you are reading.
+This documentation site runs on Waaseyaa. It uses the SSR package for server-side rendering, the entity system for content management, and the same routing and access control packages available to every Waaseyaa application. Every feature documented here is demonstrated in production by the site you are reading.
 
 ## Getting Started
 
-Ready to build something? Here is the recommended path:
+Here is the recommended path:
 
 1. **[Installation](./installation.md)** — Set up a new project with Composer
 2. **[Your First App](./your-first-app.md)** — Build a content type from scratch

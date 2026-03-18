@@ -7,7 +7,7 @@ description: How the AI packages work together for intelligent applications
 
 # AI Overview
 
-Waaseyaa is AI-native: entity schemas automatically generate structured tool definitions, enabling AI agents to create, read, update, and query content through typed interfaces. This guide covers the four AI packages and how they work together.
+Waaseyaa is AI-native. Entity schemas automatically generate structured tool definitions. AI agents can create, read, update, and query content through typed interfaces. This guide covers the four AI packages and how they work together.
 
 ## The Four AI Packages
 
@@ -41,10 +41,10 @@ ai-vector  (independent, integrates with ai-pipeline for RAG)
 
 The `waaseyaa/ai-schema` package bridges entity type definitions and AI systems. It reads your entity types and field definitions to generate:
 
-- **JSON Schema** — Structured schemas describing entity fields, types, and constraints
-- **MCP Tool definitions** — Model Context Protocol tools that AI agents can call
+- **JSON Schema** describing entity fields, types, and constraints
+- **MCP Tool definitions** that AI agents can call through the Model Context Protocol
 
-### How It Works
+### How Schema Generation Works
 
 Every field type in Waaseyaa implements `jsonSchema()`, which returns the JSON Schema representation of that field. The `SchemaGenerator` collects these across an entity type to produce a complete schema:
 
@@ -59,6 +59,8 @@ $schema = $generator->generate('article');
 // Result: a complete JSON Schema object describing
 // all fields, their types, required constraints, etc.
 ```
+
+This produces a JSON Schema object that any JSON Schema-compatible tool can validate against.
 
 ### Schema Validation
 
@@ -75,20 +77,20 @@ if (!$result->isValid()) {
 }
 ```
 
-This is essential for AI workflows where language models produce structured output that must conform to entity field definitions.
+This catches malformed data from LLM outputs before it touches your entities.
 
 ### Automatic MCP Tools
 
-When entity schemas are generated, they can be exposed as MCP (Model Context Protocol) tools. This means any MCP-compatible AI client can discover and use your entity types as tools — creating, reading, updating, and querying content through structured calls with no additional code.
+When entity schemas are generated, they can be exposed as MCP (Model Context Protocol) tools. Any MCP-compatible AI client can discover and use your entity types as tools. Creating, reading, updating, and querying content through structured calls with no additional code.
 
 ## ai-pipeline: Inference Orchestration
 
 The `waaseyaa/ai-pipeline` package is the execution layer between your application logic and LLM providers. It handles:
 
-- **Prompt assembly** — Building prompts from templates and context
-- **Model invocation** — Calling LLM APIs (OpenAI, Ollama, etc.)
-- **Response parsing** — Extracting structured data from model responses
-- **Retry logic** — Handling transient failures and rate limits
+- **Prompt assembly** from templates and context
+- **Model invocation** through LLM APIs (OpenAI, Ollama, etc.)
+- **Response parsing** to extract structured data from model responses
+- **Retry logic** for transient failures and rate limits
 
 ### Pipeline Steps
 
@@ -115,7 +117,9 @@ class SummarizeStep implements PipelineStepInterface
 }
 ```
 
-### Running a Pipeline
+Each step receives the accumulated context from previous steps, processes it, and returns an updated context for the next step.
+
+### Run a Pipeline
 
 ```php
 use Waaseyaa\AiPipeline\Pipeline;
@@ -138,11 +142,11 @@ $summary = $result['summary'];
 $categories = $result['categories'];
 ```
 
-Pipelines are composable: you can chain any combination of steps for different workflows.
+This pipeline extracts content, summarizes it, and classifies it. Each step adds its output to the context.
 
 ## ai-agent: Agent Orchestration
 
-The `waaseyaa/ai-agent` package provides a higher-level abstraction for AI agent workflows. While pipelines execute a fixed sequence of steps, agents make decisions about which tools to call and in what order.
+The `waaseyaa/ai-agent` package provides a higher-level abstraction for AI agent workflows. While pipelines execute a fixed sequence of steps, agents decide which tools to call and in what order.
 
 ### AgentExecutor
 
@@ -173,9 +177,11 @@ $response = $executor->run($context, 'Create an article about PHP 8.4 features')
 // 4. Returned a final response confirming what was created
 ```
 
+The agent receives MCP tools generated from your entity schemas and uses them to fulfill the user's request.
+
 ### Audit Logging
 
-The agent package includes audit logging for every tool call. This provides a complete trace of what the agent did, which is essential for:
+The agent package logs every tool call. This provides a complete trace of what the agent did:
 
 - Debugging agent behavior
 - Compliance and accountability
@@ -185,14 +191,14 @@ The agent package includes audit logging for every tool call. This provides a co
 
 The agent depends on `ai-schema` for its tool definitions. When you pass entity type IDs to `getTools()`, the schema generator produces MCP-compatible tool definitions that the agent can call. The tools map directly to entity CRUD operations:
 
-- `create_{entity_type}` — Create a new entity
-- `read_{entity_type}` — Load an entity by ID
-- `update_{entity_type}` — Update entity fields
-- `list_{entity_type}` — Query entities with filters
+- `create_{entity_type}` creates a new entity
+- `read_{entity_type}` loads an entity by ID
+- `update_{entity_type}` updates entity fields
+- `list_{entity_type}` queries entities with filters
 
 ## ai-vector: Embedding and Search
 
-The `waaseyaa/ai-vector` package adds semantic search capabilities through vector embeddings.
+The `waaseyaa/ai-vector` package adds semantic search through vector embeddings.
 
 ### Embedding Providers
 
@@ -218,7 +224,9 @@ The package supports multiple embedding backends, configured in `config/waaseyaa
 ],
 ```
 
-### Storing Embeddings
+This configuration sets the embedding provider, model, and which entity fields to embed. You can use Ollama for local development or OpenAI for production.
+
+### Store Embeddings
 
 The `VectorStoreInterface` provides an abstraction over vector databases:
 
@@ -233,9 +241,11 @@ $vectorStore->store(
 );
 ```
 
+This stores a vector embedding keyed to a specific entity. The embedding provider converts text to a vector, and the vector store persists it.
+
 ### Similarity Search
 
-Perform semantic search to find related content:
+You perform semantic search to find related content:
 
 ```php
 $results = $vectorStore->search(
@@ -250,6 +260,8 @@ foreach ($results as $result) {
     echo sprintf('%s (score: %.3f)', $article->label(), $result->score);
 }
 ```
+
+This embeds the query text, searches for similar article embeddings, and returns results ranked by similarity score.
 
 ### RAG Workflows
 
@@ -273,11 +285,11 @@ $result = $executor->run($pipeline, [
 ]);
 ```
 
-This pattern ensures AI responses are grounded in your actual content rather than relying solely on the model's training data.
+This pipeline embeds the query, retrieves the five most similar documents, and generates a response grounded in that content.
 
-## Example: Full AI Workflow
+## Full AI Workflow Example
 
-Here is how the four packages work together in a complete workflow:
+Here is how the four packages work together:
 
 ```
 1. Schema (ai-schema)
@@ -293,13 +305,15 @@ Here is how the four packages work together in a complete workflow:
    Entity content → Embeddings → Semantic search → RAG context
 ```
 
-A concrete example: an editorial assistant that helps writers:
+A concrete example: an editorial assistant that helps writers.
 
 1. Writer asks: "Find articles about performance and summarize the key points"
 2. `ai-vector` searches for articles semantically related to "performance"
 3. `ai-pipeline` sends the retrieved articles through a summarization pipeline
 4. `ai-agent` orchestrates the full flow, calling vector search and summarization tools
 5. `ai-schema` ensures all entity interactions use typed, validated schemas
+
+The writer gets a grounded summary based on actual content in the system.
 
 ## Next Steps
 

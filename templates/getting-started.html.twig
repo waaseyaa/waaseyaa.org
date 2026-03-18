@@ -1,12 +1,12 @@
 {% extends "base.html.twig" %}
 
 {% block title %}Getting Started{% endblock %}
-{% block description %}Get started with Waaseyaa: install prerequisites, create a project, and build your first entity-driven application.{% endblock %}
+{% block description %}Get started with Waaseyaa: prerequisites, project setup, and your first entity type.{% endblock %}
 
 {% block content %}
 <section class="page-header">
     <h1>Getting Started</h1>
-    <p>Set up a Waaseyaa project in a few minutes.</p>
+    <p>From zero to a running Waaseyaa project.</p>
 </section>
 
 <section class="content-section">
@@ -22,7 +22,7 @@
     <pre><code>composer create-project waaseyaa/skeleton my-app
 cd my-app
 php -S localhost:8000 -t public</code></pre>
-    <p>This scaffolds a minimal Waaseyaa application and starts the built-in PHP server. Open <code>http://localhost:8000</code> to see it running.</p>
+    <p>That scaffolds a minimal Waaseyaa application and starts the built-in PHP server. Open <code>http://localhost:8000</code> to confirm it's running.</p>
 </section>
 
 <section class="content-section">
@@ -53,11 +53,11 @@ EntityType::define('article')
     ->addField(FieldDefinition::create('body', TextField::class))
     ->revisionable()
     ->register();</code></pre>
-    <p>This registers an <code>article</code> entity type with two fields. Waaseyaa handles storage, validation, and API generation automatically.</p>
+    <p>Two fields, one entity type. Waaseyaa handles storage, validation, and API generation from there.</p>
 </section>
 
 <section class="content-section">
     <h2>What's Next</h2>
-    <p>Visit the <a href="https://github.com/waaseyaa/framework">GitHub repository</a> for full documentation, package reference, and examples. Read the <a href="https://jonesrussell.github.io/blog/waaseyaa-intro/">blog series</a> for the story behind the framework.</p>
+    <p>The <a href="/docs">documentation</a> covers the full framework: entity system, routing, access control, AI packages, and more. For the story behind why Waaseyaa exists, read the <a href="https://jonesrussell.github.io/blog/waaseyaa-intro/">blog series</a>.</p>
 </section>
 {% endblock %}
