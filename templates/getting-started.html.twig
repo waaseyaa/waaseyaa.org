@@ -1,63 +1,110 @@
 {% extends "base.html.twig" %}
 
 {% block title %}Getting Started{% endblock %}
-{% block description %}Get started with Waaseyaa: prerequisites, project setup, and your first entity type.{% endblock %}
+{% block description %}Get started with Waaseyaa: install, migrate, create content, and explore the admin API.{% endblock %}
 
 {% block content %}
 <section class="page-header">
     <h1>Getting Started</h1>
-    <p>From zero to a running Waaseyaa project.</p>
+    <p>From zero to a running Waaseyaa application with content and an admin API.</p>
 </section>
 
 <section class="content-section">
     <h2>Prerequisites</h2>
     <ul>
-        <li>PHP 8.4 or later</li>
-        <li>Composer 2.x</li>
+        <li><strong>PHP 8.4+</strong> with extensions: <code>pdo_sqlite</code>, <code>mbstring</code>, <code>json</code>, <code>openssl</code></li>
+        <li><strong>Composer 2.x</strong> (<a href="https://getcomposer.org">getcomposer.org</a>)</li>
+        <li><strong>SQLite 3</strong> (the default database)</li>
     </ul>
 </section>
 
 <section class="content-section">
     <h2>Create a New Project</h2>
-    <pre><code>composer create-project waaseyaa/skeleton my-app
-cd my-app
-php -S localhost:8000 -t public</code></pre>
-    <p>That scaffolds a minimal Waaseyaa application and starts the built-in PHP server. Open <code>http://localhost:8000</code> to confirm it's running.</p>
+    <pre><code class="language-bash">composer create-project waaseyaa/skeleton my-app
+cd my-app</code></pre>
+    <p>That scaffolds a full Waaseyaa application from the skeleton. Your project now has config files, a CLI binary, templates, and directory stubs for entities, controllers, and service providers.</p>
+</section>
+
+<section class="content-section">
+    <h2>Install and Migrate the Database</h2>
+    <pre><code class="language-bash">php bin/waaseyaa migrate</code></pre>
+    <p>This creates a SQLite database at <code>waaseyaa.sqlite</code> in your project root and runs all pending migrations. The skeleton ships with entity types for nodes, taxonomy terms, media, menus, and users. All of their tables are created here.</p>
+</section>
+
+<section class="content-section">
+    <h2>Start the Dev Server</h2>
+    <pre><code class="language-bash">php -S localhost:8080 -t public</code></pre>
+    <p>Open <a href="http://localhost:8080">http://localhost:8080</a> in your browser. You should see the Waaseyaa welcome page.</p>
+</section>
+
+<section class="content-section">
+    <h2>Explore What's Included</h2>
+    <p>The skeleton ships with several entity types out of the box. List them:</p>
+    <pre><code class="language-bash">php bin/waaseyaa entity-type:list</code></pre>
+    <p>You'll see <code>node</code>, <code>taxonomy_term</code>, <code>media</code>, <code>menu</code>, <code>user</code>, and others. These are the content building blocks that come with the framework packages.</p>
+</section>
+
+<section class="content-section">
+    <h2>Create Your First Content</h2>
+    <p>Create a node entity from the CLI:</p>
+    <pre><code class="language-bash">php bin/waaseyaa entity:create node</code></pre>
+    <p>The CLI walks you through setting field values interactively. Once created, verify it exists:</p>
+    <pre><code class="language-bash">php bin/waaseyaa entity:list node</code></pre>
+    <p>Your node is stored in SQLite and immediately available through the JSON:API.</p>
+</section>
+
+<section class="content-section">
+    <h2>Hit the JSON:API</h2>
+    <p>Every entity type gets a full CRUD API automatically. With the dev server running:</p>
+    <pre><code class="language-bash">curl http://localhost:8080/api/node | python3 -m json.tool</code></pre>
+    <p>That returns your node as a spec-compliant JSON:API response. Filtering, sorting, pagination, and relationship includes all work out of the box.</p>
+</section>
+
+<section class="content-section">
+    <h2>Access the Admin API</h2>
+    <p>The admin surface package exposes API endpoints for building admin interfaces. These are available at <code>/admin/surface/</code>:</p>
+    <pre><code class="language-bash"># Get the admin catalog (what entity types are manageable)
+curl http://localhost:8080/admin/surface/catalog | python3 -m json.tool
+
+# List nodes through the admin API
+curl http://localhost:8080/admin/surface/node | python3 -m json.tool
+
+# Get a specific entity
+curl http://localhost:8080/admin/surface/node/1 | python3 -m json.tool</code></pre>
+    <p>The catalog endpoint returns a schema describing every entity type, its fields, and available actions. Admin UIs consume this to render forms and list views dynamically.</p>
 </section>
 
 <section class="content-section">
     <h2>Project Structure</h2>
     <pre><code>my-app/
+├── bin/
+│   └── waaseyaa              # CLI binary
 ├── config/
-│   └── waaseyaa.php        # Framework configuration
+│   ├── waaseyaa.php          # Framework configuration
+│   ├── entity-types.php      # Custom entity type registration
+│   └── services.php          # Service overrides
 ├── public/
-│   └── index.php           # Front controller
+│   └── index.php             # Front controller
 ├── src/
-│   └── Provider/
-│       └── AppServiceProvider.php
-├── composer.json
-└── .env</code></pre>
-    <p>The front controller boots the Waaseyaa kernel. Configuration lives in <code>config/waaseyaa.php</code>. Your application logic goes in service providers under <code>src/Provider/</code>.</p>
-</section>
-
-<section class="content-section">
-    <h2>Define Your First Entity</h2>
-    <pre><code>use Waaseyaa\Entity\EntityType;
-use Waaseyaa\Field\FieldDefinition;
-use Waaseyaa\Field\Type\StringField;
-use Waaseyaa\Field\Type\TextField;
-
-EntityType::define('article')
-    ->label('Article')
-    ->addField(FieldDefinition::create('title', StringField::class)->required())
-    ->addField(FieldDefinition::create('body', TextField::class))
-    ->revisionable()
-    ->register();</code></pre>
-    <p>Two fields, one entity type. Waaseyaa handles storage, validation, and API generation from there.</p>
+│   ├── Controller/           # HTTP controllers
+│   ├── Entity/               # Your entity classes
+│   ├── Provider/             # Service providers
+│   └── ...                   # Access, Domain, Seed, etc.
+├── templates/                # Twig templates
+├── storage/                  # Runtime storage
+└── waaseyaa.sqlite           # SQLite database (after migrate)</code></pre>
+    <p>Configuration lives in <code>config/</code>. Your application code goes under <code>src/</code>. The front controller at <code>public/index.php</code> boots the HTTP kernel. The CLI binary at <code>bin/waaseyaa</code> boots the console kernel.</p>
 </section>
 
 <section class="content-section">
     <h2>What's Next</h2>
-    <p>The <a href="/docs">documentation</a> covers the full framework: entity system, routing, access control, AI packages, and more. For the story behind why Waaseyaa exists, read the <a href="https://jonesrussell.github.io/blog/waaseyaa-intro/">blog series</a>.</p>
+    <p>You have a running application with built-in entity types, a JSON:API, and admin endpoints. From here:</p>
+    <ul>
+        <li><a href="/docs/getting-started/your-first-app">Build a custom entity type</a> with typed fields, a controller, and a Twig template</li>
+        <li><a href="/docs/getting-started/concepts">Understand core concepts</a>: entities, fields, service providers, and the kernel lifecycle</li>
+        <li><a href="/docs/core/entity">Explore the entity package</a> for the full entity/field API reference</li>
+        <li><a href="/docs/access/access-control">Set up access control</a> with the deny-unless-granted permission model</li>
+    </ul>
+    <p>For the story behind why Waaseyaa exists, read the <a href="https://jonesrussell.github.io/blog/waaseyaa-intro/">blog series</a>.</p>
 </section>
 {% endblock %}
