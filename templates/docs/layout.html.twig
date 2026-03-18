@@ -1,0 +1,40 @@
+{% extends "base.html.twig" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="docs-layout">
+    <aside class="docs-sidebar">
+        <nav class="docs-nav">
+            {% for catSlug, catData in index %}
+                <div class="docs-nav-category">
+                    <h4 class="docs-nav-heading">{{ catData.label }}</h4>
+                    <ul class="docs-nav-list">
+                        {% for page in catData.pages %}
+                            <li>
+                                <a href="/docs/{{ catSlug }}/{{ page.slug }}"
+                                   class="docs-nav-link{% if path == '/docs/' ~ catSlug ~ '/' ~ page.slug %} active{% endif %}">
+                                    {{ page.title }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+        </nav>
+    </aside>
+    <div class="docs-content">
+        {% block docs_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+{% endblock %}

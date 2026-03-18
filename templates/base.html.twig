@@ -6,6 +6,7 @@
     <title>{% block title %}Waaseyaa{% endblock %} — Entity-first PHP Framework</title>
     <meta name="description" content="{% block description %}Waaseyaa is an entity-first, AI-native PHP framework built on Symfony components. 43 packages for building modern content platforms.{% endblock %}">
     <link rel="stylesheet" href="/css/site.css">
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
     <nav class="site-nav">
@@ -13,6 +14,7 @@
             <a href="/" class="nav-brand">Waaseyaa</a>
             <ul class="nav-links">
                 <li><a href="/" {% if path == '/' %}class="active"{% endif %}>Home</a></li>
+                <li><a href="/docs"{% if path|default('') starts with '/docs' %} class="active"{% endif %}>Docs</a></li>
                 <li><a href="/features" {% if path == '/features' %}class="active"{% endif %}>Features</a></li>
                 <li><a href="/getting-started" {% if path == '/getting-started' %}class="active"{% endif %}>Getting Started</a></li>
                 <li><a href="/about" {% if path == '/about' %}class="active"{% endif %}>About</a></li>
@@ -31,5 +33,6 @@
             <p class="footer-copy">&copy; {{ "now"|date("Y") }} Russell Jones</p>
         </div>
     </footer>
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

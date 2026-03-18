@@ -7,12 +7,35 @@ namespace WaaseyaaOrg\Provider;
 use Waaseyaa\Foundation\ServiceProvider\ServiceProvider;
 use Waaseyaa\Routing\RouteBuilder;
 use Waaseyaa\Routing\WaaseyaaRouter;
+use WaaseyaaOrg\Command\DocsFetchCommand;
+use WaaseyaaOrg\Service\DocsFetcher;
+use WaaseyaaOrg\Service\DocsNavigationBuilder;
+use WaaseyaaOrg\Service\DocsRenderer;
 
 final class SiteServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        $storagePath = dirname(__DIR__, 2) . '/storage/docs';
+        $guidesPath = dirname(__DIR__, 2) . '/docs/guides';
 
-    public function routes(WaaseyaaRouter $router): void
+        $this->singleton(DocsRenderer::class, static fn () => new DocsRenderer());
+
+        $this->singleton(DocsFetcher::class, static function () use ($storagePath): DocsFetcher {
+            $manifest = require dirname(__DIR__, 2) . '/config/docs-manifest.php';
+            $githubToken = getenv('GITHUB_TOKEN') ?: null;
+
+            return new DocsFetcher($storagePath, $manifest, $githubToken);
+        });
+
+        $this->singleton(DocsNavigationBuilder::class, function () use ($guidesPath, $storagePath): DocsNavigationBuilder {
+            $renderer = $this->resolve(DocsRenderer::class);
+
+            return new DocsNavigationBuilder($renderer, $guidesPath, $storagePath);
+        });
+    }
+
+    public function routes(WaaseyaaRouter $router, ?\Waaseyaa\Entity\EntityTypeManager $entityTypeManager = null): void
     {
         $router->addRoute(
             'page.home',
@@ -49,5 +72,36 @@ final class SiteServiceProvider extends ServiceProvider
                 ->methods('GET')
                 ->build(),
         );
+
+        $router->addRoute('docs.landing', RouteBuilder::create('/docs')
+            ->controller('WaaseyaaOrg\\Controller\\DocsController::landing')
+            ->methods('GET')
+            ->render()
+            ->build());
+
+        $router->addRoute('docs.category', RouteBuilder::create('/docs/{category}')
+            ->controller('WaaseyaaOrg\\Controller\\DocsController::category')
+            ->methods('GET')
+            ->render()
+            ->build());
+
+        $router->addRoute('docs.page', RouteBuilder::create('/docs/{category}/{slug}')
+            ->controller('WaaseyaaOrg\\Controller\\DocsController::page')
+            ->methods('GET')
+            ->render()
+            ->build());
+    }
+
+    public function commands(
+        \Waaseyaa\Entity\EntityTypeManager $entityTypeManager,
+        \Waaseyaa\Database\PdoDatabase $database,
+        \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $dispatcher,
+    ): array {
+        return [
+            new DocsFetchCommand(
+                $this->resolve(DocsFetcher::class),
+                $this->resolve(DocsNavigationBuilder::class),
+            ),
+        ];
     }
 }
