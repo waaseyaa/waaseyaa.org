@@ -76,8 +76,17 @@ Single source of truth for how packages map to docs navigation.
 
 - Deploy pipeline runs `docs:fetch` every deploy — no runtime cache expiry needed
 - For local dev, run the command manually
-- Uses GitHub unauthenticated API (60 req/hr), sufficient for ~45 files per deploy
-- Optional GitHub token via env var for higher rate limits
+- `GITHUB_TOKEN` env var is **required** in the deploy pipeline (authenticated API: 5,000 req/hr). Unauthenticated API (60 req/hr) is a local-dev fallback only — sufficient but tight, will warn if no token is set
+
+### Failure Modes
+
+- **GitHub API unreachable or auth failure:** Fail the deploy. Docs must be current.
+- **Individual README missing:** Warn and skip — the package gets no reference page but the build continues. Log the missing packages.
+- **Re-deploy after partial failure:** The fetch command writes to a temporary directory first, then atomically swaps into `storage/docs/`. Previous cache is preserved until a full successful fetch completes.
+
+### Slug Collision Prevention
+
+The `index.json` build step checks for collisions between guide slugs and package slugs within the same category. If a guide at `docs/guides/core/entity.md` and a package `entity` both map to category `core`, the build **fails with an error**. The manifest must place one of them in a different category or use a different slug. This is enforced at build time, not runtime.
 
 ## Rendering Pipeline
 
@@ -85,11 +94,11 @@ Single source of truth for how packages map to docs navigation.
 
 - `GET /docs` — Landing page with category overview
 - `GET /docs/{category}` — Category listing (all pages in that category)
-- `GET /docs/{category}/{slug}` — Individual doc page (guide or package reference)
+- `GET /docs/{category}/{slug}` — Individual doc page (guide or package reference). Returns 404 via the framework's standard error handling if slug is not found in `index.json`.
 
 ### Markdown to HTML
 
-- `league/commonmark` with GFM extensions (tables, task lists, autolinks)
+- `league/commonmark` with GFM extensions (tables, task lists, autolinks) and `HeadingPermalinkExtension` for anchor links on headings (e.g., `#entity-fields`)
 - Syntax highlighting via Prism.js (client-side, loaded from CDN or vendored)
 - Frontmatter parsed with `symfony/yaml` before passing to CommonMark
 
@@ -198,9 +207,11 @@ storage/docs/                          # Git-ignored, populated by docs:fetch
 ### New Composer Dependencies
 
 - `league/commonmark` — Markdown to HTML
-- `symfony/yaml` — Frontmatter parsing (may already be available via framework)
+- `symfony/yaml` — Frontmatter parsing (verify if already pulled in by framework packages before adding)
 
 No other new dependencies. Prism.js loaded client-side.
+
+**Note:** The package count referenced throughout this spec should be reconciled with the actual packages in the framework repo during implementation. The manifest will be the authoritative list — only packages present in the manifest get doc pages.
 
 ### Modified Files
 
