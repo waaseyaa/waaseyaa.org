@@ -1,12 +1,12 @@
 {% extends "base.html.twig" %}
 
 {% block title %}Getting Started{% endblock %}
-{% block description %}Get started with Waaseyaa: install, migrate, create content, and explore the admin API.{% endblock %}
+{% block description %}Get started with Waaseyaa: create a project, migrate, start the server, and create your first content.{% endblock %}
 
 {% block content %}
 <section class="page-header">
     <h1>Getting Started</h1>
-    <p>From zero to a running Waaseyaa application with content and an admin API.</p>
+    <p>From zero to a running Waaseyaa application with content you can query.</p>
 </section>
 
 <section class="content-section">
@@ -20,13 +20,13 @@
 
 <section class="content-section">
     <h2>Create a New Project</h2>
-    <pre><code class="language-bash">composer create-project waaseyaa/skeleton my-app
+    <pre><code class="language-bash">composer create-project waaseyaa/waaseyaa my-app
 cd my-app</code></pre>
     <p>That scaffolds a full Waaseyaa application from the skeleton. Your project now has config files, a CLI binary, templates, and directory stubs for entities, controllers, and service providers.</p>
 </section>
 
 <section class="content-section">
-    <h2>Install and Migrate the Database</h2>
+    <h2>Run Migrations</h2>
     <pre><code class="language-bash">php bin/waaseyaa migrate</code></pre>
     <p>This creates a SQLite database at <code>waaseyaa.sqlite</code> in your project root and runs all pending migrations. The skeleton ships with entity types for nodes, taxonomy terms, media, menus, and users. All of their tables are created here.</p>
 </section>
@@ -34,44 +34,24 @@ cd my-app</code></pre>
 <section class="content-section">
     <h2>Start the Dev Server</h2>
     <pre><code class="language-bash">php -S localhost:8080 -t public</code></pre>
-    <p>Open <a href="http://localhost:8080">http://localhost:8080</a> in your browser. You should see the Waaseyaa welcome page.</p>
+    <p>Open <code>http://localhost:8080</code> in your browser. You should see the Waaseyaa welcome page with links to the admin, API, and documentation.</p>
 </section>
 
 <section class="content-section">
-    <h2>Explore What's Included</h2>
-    <p>The skeleton ships with several entity types out of the box. List them:</p>
+    <h2>Explore Entity Types</h2>
+    <p>Open a second terminal. The skeleton ships with 11 entity types out of the box:</p>
     <pre><code class="language-bash">php bin/waaseyaa entity-type:list</code></pre>
     <p>You'll see <code>node</code>, <code>taxonomy_term</code>, <code>media</code>, <code>menu</code>, <code>user</code>, and others. These are the content building blocks that come with the framework packages.</p>
 </section>
 
 <section class="content-section">
     <h2>Create Your First Content</h2>
-    <p>Create a node entity from the CLI:</p>
     <pre><code class="language-bash">php bin/waaseyaa entity:create node</code></pre>
-    <p>The CLI walks you through setting field values interactively. Once created, verify it exists:</p>
+    <p>The CLI walks you through setting field values. Once created, verify it exists:</p>
     <pre><code class="language-bash">php bin/waaseyaa entity:list node</code></pre>
-    <p>Your node is stored in SQLite and immediately available through the JSON:API.</p>
-</section>
-
-<section class="content-section">
-    <h2>Hit the JSON:API</h2>
-    <p>Every entity type gets a full CRUD API automatically. With the dev server running:</p>
-    <pre><code class="language-bash">curl http://localhost:8080/api/node | python3 -m json.tool</code></pre>
-    <p>That returns your node as a spec-compliant JSON:API response. Filtering, sorting, pagination, and relationship includes all work out of the box.</p>
-</section>
-
-<section class="content-section">
-    <h2>Access the Admin API</h2>
-    <p>The admin surface package exposes API endpoints for building admin interfaces. These are available at <code>/admin/surface/</code>:</p>
-    <pre><code class="language-bash"># Get the admin catalog (what entity types are manageable)
-curl http://localhost:8080/admin/surface/catalog | python3 -m json.tool
-
-# List nodes through the admin API
-curl http://localhost:8080/admin/surface/node | python3 -m json.tool
-
-# Get a specific entity
-curl http://localhost:8080/admin/surface/node/1 | python3 -m json.tool</code></pre>
-    <p>The catalog endpoint returns a schema describing every entity type, its fields, and available actions. Admin UIs consume this to render forms and list views dynamically.</p>
+    <p>Your node is stored in SQLite. You can also view it through the JSON:API:</p>
+    <pre><code class="language-bash">curl -s http://localhost:8080/api/node | python3 -m json.tool</code></pre>
+    <p>That returns a spec-compliant JSON:API response. Filtering, sorting, pagination, and relationship includes all work out of the box. Note that the default access control is deny-unless-granted, so anonymous requests will only see entities that have been explicitly made public.</p>
 </section>
 
 <section class="content-section">
@@ -86,10 +66,12 @@ curl http://localhost:8080/admin/surface/node/1 | python3 -m json.tool</code></p
 ├── public/
 │   └── index.php             # Front controller
 ├── src/
+│   ├── Access/               # Authorization policies
 │   ├── Controller/           # HTTP controllers
 │   ├── Entity/               # Your entity classes
-│   ├── Provider/             # Service providers
-│   └── ...                   # Access, Domain, Seed, etc.
+│   ├── Provider/             # Service providers (DI, routing)
+│   ├── Domain/               # Domain logic by bounded context
+│   └── Seed/                 # Seeders for dev/local bootstrap
 ├── templates/                # Twig templates
 ├── storage/                  # Runtime storage
 └── waaseyaa.sqlite           # SQLite database (after migrate)</code></pre>
@@ -98,7 +80,7 @@ curl http://localhost:8080/admin/surface/node/1 | python3 -m json.tool</code></p
 
 <section class="content-section">
     <h2>What's Next</h2>
-    <p>You have a running application with built-in entity types, a JSON:API, and admin endpoints. From here:</p>
+    <p>You have a running application with built-in entity types and a JSON:API. From here:</p>
     <ul>
         <li><a href="/docs/getting-started/your-first-app">Build a custom entity type</a> with typed fields, a controller, and a Twig template</li>
         <li><a href="/docs/getting-started/concepts">Understand core concepts</a>: entities, fields, service providers, and the kernel lifecycle</li>
