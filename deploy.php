@@ -35,6 +35,11 @@ task('php-fpm:reload', function (): void {
     run('sudo systemctl reload php8.4-fpm');
 });
 
+desc('Fetch package READMEs and build docs navigation index');
+task('docs:fetch', function (): void {
+    run('cd {{release_path}} && php waaseyaa docs:fetch');
+});
+
 desc('Deploy waaseyaa.org to production');
 task('deploy', [
     'deploy:info',
@@ -44,6 +49,7 @@ task('deploy', [
     'deploy:upload',
     'deploy:shared',
     'deploy:writable',
+    'docs:fetch',
     'waaseyaa:clear-manifest',
     'deploy:symlink',
     'deploy:unlock',

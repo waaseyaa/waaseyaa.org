@@ -74,3 +74,5 @@ jobs:
       - name: Deploy
         working-directory: waaseyaa-org
         run: dep deploy production --no-interaction
+        env:
+          GITHUB_TOKEN: ${{ secrets.DOCS_GITHUB_TOKEN }}
