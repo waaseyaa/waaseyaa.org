@@ -38,12 +38,7 @@ final class DocsFetcher
             $url = self::RAW_BASE . '/' . $packageName . '/README.md';
             $content = $this->httpGet($url);
 
-            if ($content === null) {
-                $result['errors'][] = $packageName;
-                continue;
-            }
-
-            if (trim($content) === '') {
+            if ($content === null || trim($content) === '') {
                 $result['skipped'][] = $packageName;
                 continue;
             }

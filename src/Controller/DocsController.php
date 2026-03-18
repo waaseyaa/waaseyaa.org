@@ -12,13 +12,17 @@ use WaaseyaaOrg\Service\DocsRenderer;
 final class DocsController
 {
     private ?array $index = null;
+    private readonly string $storagePath;
+    private readonly string $guidesPath;
 
     public function __construct(
         private readonly Environment $twig,
         private readonly DocsRenderer $renderer,
-        private readonly string $storagePath,
-        private readonly string $guidesPath,
-    ) {}
+    ) {
+        $basePath = dirname(__DIR__, 2);
+        $this->storagePath = $basePath . '/storage/docs';
+        $this->guidesPath = $basePath . '/docs/guides';
+    }
 
     public function landing(array $params, array $query, $account, HttpRequest $request): SsrResponse
     {

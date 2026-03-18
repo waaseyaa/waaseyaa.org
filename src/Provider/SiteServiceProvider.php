@@ -8,7 +8,6 @@ use Waaseyaa\Foundation\ServiceProvider\ServiceProvider;
 use Waaseyaa\Routing\RouteBuilder;
 use Waaseyaa\Routing\WaaseyaaRouter;
 use WaaseyaaOrg\Command\DocsFetchCommand;
-use WaaseyaaOrg\Controller\DocsController;
 use WaaseyaaOrg\Service\DocsFetcher;
 use WaaseyaaOrg\Service\DocsNavigationBuilder;
 use WaaseyaaOrg\Service\DocsRenderer;
@@ -34,16 +33,9 @@ final class SiteServiceProvider extends ServiceProvider
 
             return new DocsNavigationBuilder($renderer, $guidesPath, $storagePath);
         });
-
-        $this->singleton(DocsController::class, function () use ($storagePath, $guidesPath): DocsController {
-            $renderer = $this->resolve(DocsRenderer::class);
-            $twig = \Waaseyaa\SSR\SsrServiceProvider::getTwigEnvironment();
-
-            return new DocsController($twig, $renderer, $storagePath, $guidesPath);
-        });
     }
 
-    public function routes(WaaseyaaRouter $router): void
+    public function routes(WaaseyaaRouter $router, ?\Waaseyaa\Entity\EntityTypeManager $entityTypeManager = null): void
     {
         $router->addRoute(
             'page.home',
