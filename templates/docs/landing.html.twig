@@ -1,0 +1,39 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Documentation{% endblock %}
+{% block description %}Waaseyaa framework documentation — guides, tutorials, and package reference.{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Documentation</h1>
+    <p>Learn how to build modern content platforms with Waaseyaa.</p>
+</div>
+
+{% if index['getting-started'] is defined %}
+<section class="content-section">
+    <h2>Start Here</h2>
+    <div class="features-grid">
+        {% for page in index['getting-started'].pages %}
+            <a href="/docs/getting-started/{{ page.slug }}" class="card docs-card-link">
+                <h3>{{ page.title }}</h3>
+                <p>{{ page.description }}</p>
+            </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="content-section">
+    <h2>Browse by Category</h2>
+    <div class="features-grid">
+        {% for catSlug, catData in index %}
+            {% if catSlug != 'getting-started' %}
+                <a href="/docs/{{ catSlug }}" class="card docs-card-link">
+                    <h3>{{ catData.label }}</h3>
+                    <p>{{ catData.pages|length }} {{ catData.pages|length == 1 ? 'page' : 'pages' }}</p>
+                </a>
+            {% endif %}
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "docs/layout.html.twig" %}
+
+{% block title %}{{ page.title }}{% endblock %}
+{% block description %}{{ page.description }}{% endblock %}
+
+{% block docs_content %}
+<article class="docs-article">
+    <div class="docs-page-header">
+        <p class="docs-breadcrumb">
+            <a href="/docs">Docs</a> / <a href="/docs/{{ category }}">{{ categoryData.label }}</a>
+        </p>
+        <h1>{{ page.title }}</h1>
+        {% if page.description %}
+            <p class="docs-page-desc">{{ page.description }}</p>
+        {% endif %}
+    </div>
+
+    <div class="docs-body">
+        {{ content|raw }}
+    </div>
+
+    <nav class="docs-prev-next">
+        {% if prev %}
+            <a href="{{ prevUrl }}" class="docs-prev">
+                <span class="docs-prev-next-label">&larr; Previous</span>
+                <span class="docs-prev-next-title">{{ prev.title }}</span>
+            </a>
+        {% else %}
+            <span></span>
+        {% endif %}
+        {% if next %}
+            <a href="{{ nextUrl }}" class="docs-next">
+                <span class="docs-prev-next-label">Next &rarr;</span>
+                <span class="docs-prev-next-title">{{ next.title }}</span>
+            </a>
+        {% endif %}
+    </nav>
+</article>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "docs/layout.html.twig" %}
+
+{% block title %}{{ categoryData.label }}{% endblock %}
+{% block description %}Waaseyaa {{ categoryData.label }} documentation.{% endblock %}
+
+{% block docs_content %}
+<div class="docs-page-header">
+    <h1>{{ categoryData.label }}</h1>
+</div>
+<div class="docs-category-list">
+    {% for page in categoryData.pages %}
+        <a href="/docs/{{ category }}/{{ page.slug }}" class="docs-category-item">
+            <h3>{{ page.title }}</h3>
+            <p>{{ page.description }}</p>
+        </a>
+    {% endfor %}
+</div>
+{% endblock %}
