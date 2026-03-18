@@ -37,7 +37,8 @@ task('php-fpm:reload', function (): void {
 
 desc('Fetch package READMEs and build docs navigation index');
 task('docs:fetch', function (): void {
-    run('cd {{release_path}} && php waaseyaa docs:fetch');
+    $token = getenv('GITHUB_TOKEN') ?: '';
+    run('cd {{release_path}} && GITHUB_TOKEN=' . escapeshellarg($token) . ' php waaseyaa docs:fetch');
 });
 
 desc('Deploy waaseyaa.org to production');

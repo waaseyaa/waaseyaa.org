@@ -18,6 +18,8 @@ final class DocsRenderer
     public function __construct()
     {
         $environment = new Environment([
+            'html_input' => 'strip',
+            'allow_unsafe_links' => false,
             'heading_permalink' => [
                 'html_class' => 'docs-anchor',
                 'symbol' => '#',

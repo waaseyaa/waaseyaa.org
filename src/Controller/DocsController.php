@@ -139,15 +139,20 @@ final class DocsController
     private function loadMarkdown(string $category, string $slug, string $source): ?string
     {
         if ($source === 'guide') {
-            $path = $this->guidesPath . '/' . $category . '/' . $slug . '.md';
+            $baseDir = $this->guidesPath;
+            $path = $baseDir . '/' . $category . '/' . $slug . '.md';
         } else {
-            $path = $this->storagePath . '/packages/' . $slug . '.md';
+            $baseDir = $this->storagePath . '/packages';
+            $path = $baseDir . '/' . $slug . '.md';
         }
 
-        if (!file_exists($path)) {
+        $realPath = realpath($path);
+        $realBase = realpath($baseDir);
+
+        if ($realPath === false || $realBase === false || !str_starts_with($realPath, $realBase . DIRECTORY_SEPARATOR)) {
             return null;
         }
 
-        return file_get_contents($path);
+        return file_get_contents($realPath);
     }
 }
