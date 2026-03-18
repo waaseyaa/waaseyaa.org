@@ -50,7 +50,7 @@ cd my-app</code></pre>
     <p>The CLI walks you through setting field values. Once created, verify it exists:</p>
     <pre><code class="language-bash">php bin/waaseyaa entity:list node</code></pre>
     <p>Your node is stored in SQLite. You can also view it through the JSON:API:</p>
-    <pre><code class="language-bash">curl -s http://localhost:8080/api/node | python3 -m json.tool</code></pre>
+    <pre><code class="language-bash">curl -s http://localhost:8080/api/node | jq</code></pre>
     <p>That returns a spec-compliant JSON:API response. Filtering, sorting, pagination, and relationship includes all work out of the box. Note that the default access control is deny-unless-granted, so anonymous requests will only see entities that have been explicitly made public.</p>
 </section>
 
