@@ -7,7 +7,7 @@
 
 Build `Signal Garden`, a frontend-only art prototype for the DEV WeCoded 2026 `Frontend Art: Gender Equity` prompt. The piece presents an artistic social feed as a living collage that celebrates the visibility and joy of women in tech. Geography influences what the user sees, but the experience is not a literal social app or a production map product.
 
-The prototype runs entirely in the browser with seeded data. It may be hosted within the Waaseyaa site or adjacent to it, but it does not depend on live ingestion, a backend API, or real-time platform integrations for the challenge submission.
+The prototype runs entirely in the browser with seeded data. It will be hosted within `waaseyaa.org` as a dedicated page so the piece can borrow the site's existing shell while keeping its own visual identity. It does not depend on live ingestion, a backend API, or real-time platform integrations for the challenge submission.
 
 ## Goals
 
@@ -166,12 +166,14 @@ The implementation should stay strictly frontend. A single-page app is sufficien
 
 ### Candidate Stack
 
-Use the smallest stack that makes visual iteration fast. Likely options:
+Use vanilla JavaScript, HTML, and CSS inside the existing `waaseyaa.org` app. The current site is small and template-driven, and the prototype does not need a client framework. This keeps the implementation aligned with the hosting repo and reduces setup overhead for a one-page art piece.
 
-- Vanilla JS + CSS if the composition is mostly DOM/CSS driven
-- A lightweight React or Vite setup if component state and animation orchestration benefit from it
+The page should be rendered from a dedicated Twig template with a small browser script responsible for:
 
-The deciding factor should be animation and layout control, not framework preference.
+- Loading seeded JSON
+- Tracking the active region
+- Recomposing visible cards and overlays
+- Applying motion and decorative state changes
 
 ## Failure Handling
 
