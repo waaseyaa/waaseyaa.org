@@ -136,13 +136,29 @@ main {
     color: var(--color-accent);
 }
 
+.nav-icon {
+    display: inline-flex;
+    align-items: center;
+}
+
+.nav-icon svg {
+    vertical-align: middle;
+}
+
 .nav-discord {
     color: #7289DA !important;
-    font-weight: 600;
 }
 
 .nav-discord:hover {
     color: #5865F2 !important;
+}
+
+.nav-github {
+    color: var(--color-text-muted) !important;
+}
+
+.nav-github:hover {
+    color: var(--color-text) !important;
 }
 
 /* --- Hero --- */
@@ -448,6 +464,24 @@ p code {
 
 .footer-inner a {
     color: var(--color-accent);
+}
+
+.footer-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.footer-icon {
+    display: inline-flex;
+    align-items: center;
+    color: var(--color-text-muted) !important;
+    transition: color 0.2s;
+}
+
+.footer-icon:hover {
+    color: var(--color-accent) !important;
 }
 
 .footer-copy {
