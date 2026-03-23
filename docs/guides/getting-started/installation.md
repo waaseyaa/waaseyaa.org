@@ -31,7 +31,7 @@ This confirms PHP is installed and meets the minimum version requirement.
 Use Composer to create a project from the Waaseyaa skeleton:
 
 ```bash
-composer create-project waaseyaa/waaseyaa my-site
+composer create-project waaseyaa/waaseyaa my-site --stability=dev
 cd my-site
 ```
 
