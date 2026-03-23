@@ -6,4 +6,5 @@ storage/framework/packages.php
 storage/docs/
 /*.png
 .playwright-mcp/
+/node_modules/
 
