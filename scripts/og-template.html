@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px;
+    height: 630px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow: hidden;
+  }
+  .container {
+    width: 1200px;
+    height: 630px;
+    background: linear-gradient(135deg, #0f1117, #1a1d27 40%, #2a2320 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Decorative amber glow */
+  .glow {
+    position: absolute;
+    top: -120px;
+    right: -80px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(245,158,11,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .circle-1 {
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 280px;
+    height: 280px;
+    border: 3px solid rgba(245,158,11,0.12);
+    border-radius: 50%;
+  }
+  .circle-2 {
+    position: absolute;
+    bottom: -60px;
+    left: -60px;
+    width: 220px;
+    height: 220px;
+    border: 3px solid rgba(245,158,11,0.08);
+    border-radius: 50%;
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(245,158,11,0.15);
+    color: #f59e0b;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 24px;
+    width: fit-content;
+    border: 1px solid rgba(245,158,11,0.25);
+  }
+  .title {
+    color: #e4e4e7;
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1.15;
+    max-width: 90%;
+    letter-spacing: -0.02em;
+  }
+  .accent {
+    color: #f59e0b;
+  }
+  .tagline {
+    color: rgba(228,228,231,0.6);
+    font-size: 22px;
+    margin-top: 20px;
+    font-weight: 400;
+  }
+  .bottom-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #f59e0b, #d97706, #f59e0b);
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="glow"></div>
+    <div class="circle-1"></div>
+    <div class="circle-2"></div>
+    <div class="badge">PHP Framework</div>
+    <div class="title"><span class="accent">Waaseyaa</span></div>
+    <div class="tagline">Entity-first, AI-native. 43 packages for modern content platforms.</div>
+    <div class="bottom-bar"></div>
+  </div>
+</body>
+</html>

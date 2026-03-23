@@ -18,7 +18,7 @@
     --color-surface-hover: #222632;
     --color-border: #2a2e3a;
     --color-text: #e4e4e7;
-    --color-text-muted: #9ca3af;
+    --color-text-muted: #b0b8c4;
     --color-accent: #f59e0b;
     --color-accent-hover: #d97706;
     --color-accent-subtle: rgba(245, 158, 11, 0.1);
@@ -52,6 +52,36 @@ a {
 
 a:hover {
     color: var(--color-accent-hover);
+}
+
+/* --- Focus styles (a11y) --- */
+a:focus-visible,
+.btn:focus-visible,
+.docs-nav-link:focus-visible,
+.docs-category-item:focus-visible,
+.docs-prev:focus-visible,
+.docs-next:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* --- Skip link (a11y) --- */
+.skip-link {
+    position: absolute;
+    top: -100%;
+    left: 1rem;
+    z-index: 200;
+    background: var(--color-accent);
+    color: #0f1117;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.skip-link:focus {
+    top: 0.5rem;
 }
 
 main {
@@ -107,12 +137,12 @@ main {
 }
 
 .nav-discord {
-    color: #5865F2 !important;
+    color: #7289DA !important;
     font-weight: 600;
 }
 
 .nav-discord:hover {
-    color: #4752c4 !important;
+    color: #5865F2 !important;
 }
 
 /* --- Hero --- */
@@ -625,7 +655,8 @@ p code {
 
 .docs-body h2:hover .docs-anchor,
 .docs-body h3:hover .docs-anchor,
-.docs-body h4:hover .docs-anchor {
+.docs-body h4:hover .docs-anchor,
+.docs-anchor:focus-visible {
     opacity: 1;
 }
 
@@ -712,6 +743,36 @@ p code {
     color: var(--color-accent);
 }
 
+/* --- Docs mobile menu toggle --- */
+.docs-menu-toggle {
+    display: none;
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 110;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-accent);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.docs-menu-toggle:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-accent);
+}
+
+.docs-menu-toggle:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
 /* --- Responsive: Tablet --- */
 @media (min-width: 768px) {
     .features-grid {
@@ -732,8 +793,24 @@ p code {
 
 /* --- Responsive: Docs sidebar collapse --- */
 @media (max-width: 1024px) {
+    .docs-menu-toggle {
+        display: flex;
+    }
+
     .docs-sidebar {
-        display: none;
+        position: fixed;
+        top: 64px;
+        left: 0;
+        width: 280px;
+        height: calc(100vh - 64px);
+        z-index: 105;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        border-right: 1px solid var(--color-border);
+    }
+
+    .docs-sidebar.open {
+        transform: translateX(0);
     }
 
     .docs-content {
@@ -765,5 +842,18 @@ p code {
     .docs-prev,
     .docs-next {
         max-width: 100%;
+    }
+}
+
+/* --- Reduced motion (a11y) --- */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.01ms !important;
     }
 }

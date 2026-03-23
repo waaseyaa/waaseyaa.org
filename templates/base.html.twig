@@ -5,31 +5,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Waaseyaa{% endblock %} — Entity-first PHP Framework</title>
     <meta name="description" content="{% block description %}Waaseyaa is an entity-first, AI-native PHP framework built on Symfony components. 43 packages for building modern content platforms.{% endblock %}">
+    <link rel="canonical" href="https://waaseyaa.org{{ path|default('/') }}">
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Waaseyaa">
+    <meta property="og:title" content="{% block og_title %}{{ block('title') }} — Entity-first PHP Framework{% endblock %}">
+    <meta property="og:description" content="{{ block('description') }}">
+    <meta property="og:url" content="https://waaseyaa.org{{ path|default('/') }}">
+    <meta property="og:image" content="https://waaseyaa.org/img/og-card.png">
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ block('og_title') }}">
+    <meta name="twitter:description" content="{{ block('description') }}">
+    <meta name="twitter:image" content="https://waaseyaa.org/img/og-card.png">
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" href="/img/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
     <link rel="stylesheet" href="/css/site.css">
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "Organization",
+                "name": "Waaseyaa",
+                "url": "https://waaseyaa.org",
+                "logo": "https://waaseyaa.org/img/og-card.png",
+                "sameAs": [
+                    "https://github.com/waaseyaa/framework",
+                    "https://discord.gg/ZzQNhrBb7U"
+                ]
+            },
+            {
+                "@type": "WebSite",
+                "name": "Waaseyaa",
+                "url": "https://waaseyaa.org",
+                "description": "Entity-first, AI-native PHP framework built on Symfony components."
+            }
+        ]
+    }
+    </script>
+    {% block jsonld %}{% endblock %}
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <nav class="site-nav">
+    <a href="#main" class="skip-link">Skip to content</a>
+    <nav class="site-nav" aria-label="Main">
         <div class="nav-inner">
             <a href="/" class="nav-brand">Waaseyaa</a>
             <ul class="nav-links">
-                <li><a href="/" {% if path == '/' %}class="active"{% endif %}>Home</a></li>
-                <li><a href="/docs"{% if path|default('') starts with '/docs' %} class="active"{% endif %}>Docs</a></li>
-                <li><a href="/features" {% if path == '/features' %}class="active"{% endif %}>Features</a></li>
-                <li><a href="/getting-started" {% if path == '/getting-started' %}class="active"{% endif %}>Getting Started</a></li>
-                <li><a href="/about" {% if path == '/about' %}class="active"{% endif %}>About</a></li>
-                <li><a href="https://discord.gg/ZzQNhrBb7U" class="nav-discord">Discord</a></li>
+                <li><a href="/" {% if path == '/' %}class="active" aria-current="page"{% endif %}>Home</a></li>
+                <li><a href="/docs"{% if path|default('') starts with '/docs' %} class="active" aria-current="page"{% endif %}>Docs</a></li>
+                <li><a href="/features" {% if path == '/features' %}class="active" aria-current="page"{% endif %}>Features</a></li>
+                <li><a href="/getting-started" {% if path == '/getting-started' %}class="active" aria-current="page"{% endif %}>Getting Started</a></li>
+                <li><a href="/about" {% if path == '/about' %}class="active" aria-current="page"{% endif %}>About</a></li>
+                <li><a href="https://discord.gg/ZzQNhrBb7U" class="nav-discord" target="_blank" rel="noopener noreferrer" aria-label="Discord (opens in new tab)">Discord</a></li>
             </ul>
         </div>
     </nav>
 
-    <main>
+    <main id="main">
         {% block content %}{% endblock %}
     </main>
 
     <footer class="site-footer">
         <div class="footer-inner">
-            <p>Built with Waaseyaa &mdash; <a href="https://discord.gg/ZzQNhrBb7U">Discord</a> &middot; <a href="https://github.com/waaseyaa/framework">GitHub</a></p>
+            <p>Built with Waaseyaa &mdash; <a href="https://discord.gg/ZzQNhrBb7U" target="_blank" rel="noopener noreferrer">Discord</a> &middot; <a href="https://github.com/waaseyaa/framework" target="_blank" rel="noopener noreferrer">GitHub</a></p>
             <p class="footer-copy">&copy; {{ "now"|date("Y") }} Russell Jones</p>
         </div>
     </footer>

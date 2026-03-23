@@ -6,8 +6,15 @@
 
 {% block content %}
 <div class="docs-layout">
-    <aside class="docs-sidebar">
-        <nav class="docs-nav">
+    <button class="docs-menu-toggle" aria-label="Toggle documentation menu" aria-expanded="false" aria-controls="docs-sidebar">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line class="menu-top" x1="3" y1="6" x2="21" y2="6"/>
+            <line class="menu-mid" x1="3" y1="12" x2="21" y2="12"/>
+            <line class="menu-bot" x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+    </button>
+    <aside class="docs-sidebar" id="docs-sidebar">
+        <nav class="docs-nav" aria-label="Documentation">
             {% for catSlug, catData in index %}
                 <div class="docs-nav-category">
                     <h4 class="docs-nav-heading">{{ catData.label }}</h4>
@@ -15,7 +22,8 @@
                         {% for page in catData.pages %}
                             <li>
                                 <a href="/docs/{{ catSlug }}/{{ page.slug }}"
-                                   class="docs-nav-link{% if path == '/docs/' ~ catSlug ~ '/' ~ page.slug %} active{% endif %}">
+                                   class="docs-nav-link{% if path == '/docs/' ~ catSlug ~ '/' ~ page.slug %} active{% endif %}"
+                                   {% if path == '/docs/' ~ catSlug ~ '/' ~ page.slug %}aria-current="page"{% endif %}>
                                     {{ page.title }}
                                 </a>
                             </li>
@@ -32,6 +40,23 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script>
+(function() {
+    var btn = document.querySelector('.docs-menu-toggle');
+    var sidebar = document.getElementById('docs-sidebar');
+    if (!btn || !sidebar) return;
+    btn.addEventListener('click', function() {
+        var open = sidebar.classList.toggle('open');
+        btn.setAttribute('aria-expanded', String(open));
+    });
+    sidebar.addEventListener('click', function(e) {
+        if (e.target.closest('.docs-nav-link')) {
+            sidebar.classList.remove('open');
+            btn.setAttribute('aria-expanded', 'false');
+        }
+    });
+})();
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
