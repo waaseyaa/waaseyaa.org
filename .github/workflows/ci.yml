@@ -56,7 +56,7 @@ jobs:
 
       - name: chmod bins
         working-directory: waaseyaa-org
-        run: chmod +x bin/waaseyaa bin/waaseyaa-version bin/waaseyaa-audit-site
+        run: chmod +x bin/waaseyaa bin/waaseyaa-version bin/waaseyaa-audit-site bin/verify-deploy-rsync
 
       - name: Audit site preflight
         working-directory: waaseyaa-org
