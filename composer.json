@@ -51,6 +51,14 @@
             "WaaseyaaOrg\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "WaaseyaaOrg\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5 || ^11.0"
+    },
     "extra": {
         "waaseyaa": {
             "providers": [
@@ -63,5 +71,8 @@
         "sort-packages": true
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "scripts": {
+        "test": "phpunit"
+    }
 }
