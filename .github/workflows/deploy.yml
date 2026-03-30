@@ -57,6 +57,10 @@ jobs:
             --exclude='deploy.php' \
             --exclude='ops/' \
             waaseyaa-org/ waaseyaa-org/.build/
+          # DocsController serves guide pages from docs/guides; the tree is excluded
+          # above to keep audits/specs/plans out of production.
+          mkdir -p waaseyaa-org/.build/docs/guides
+          rsync -aL waaseyaa-org/docs/guides/ waaseyaa-org/.build/docs/guides/
 
       - name: Install PHP Deployer
         run: composer global require deployer/deployer --no-interaction
