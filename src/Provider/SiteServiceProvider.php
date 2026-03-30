@@ -94,7 +94,7 @@ final class SiteServiceProvider extends ServiceProvider
 
     public function commands(
         \Waaseyaa\Entity\EntityTypeManager $entityTypeManager,
-        \Waaseyaa\Database\PdoDatabase $database,
+        \Waaseyaa\Database\DatabaseInterface $database,
         \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $dispatcher,
     ): array {
         return [
