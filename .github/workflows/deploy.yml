@@ -51,14 +51,14 @@ jobs:
             --exclude='.git' \
             --exclude='.build/' \
             --exclude='tests/' \
-            --exclude='docs/' \
+            --exclude='/docs/' \
             --exclude='.env' \
             --exclude='storage/framework/packages.php' \
             --exclude='deploy.php' \
             --exclude='ops/' \
             waaseyaa-org/ waaseyaa-org/.build/
-          # DocsController serves guide pages from docs/guides; the tree is excluded
-          # above to keep audits/specs/plans out of production.
+          # Root docs/ is excluded (anchored /docs/) so templates/docs/ Twig files
+          # still copy. Re-add docs/guides only — omit audits, superpowers, etc.
           mkdir -p waaseyaa-org/.build/docs/guides
           rsync -aL waaseyaa-org/docs/guides/ waaseyaa-org/.build/docs/guides/
 
