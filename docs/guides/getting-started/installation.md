@@ -35,6 +35,8 @@ composer create-project waaseyaa/waaseyaa my-site --stability=dev
 cd my-site
 ```
 
+`waaseyaa/waaseyaa` is the published project skeleton package. The framework source itself lives in the separate `waaseyaa/framework` monorepo.
+
 This installs the skeleton with all core packages: foundation, entity, field, routing, access control, node content types, taxonomy, media, and the CLI.
 
 ## Project Directory Structure
