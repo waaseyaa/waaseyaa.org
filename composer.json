@@ -73,6 +73,10 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit",
+        "audit-site": "./bin/waaseyaa-audit-site",
+        "post-create-project-cmd": [
+            "chmod +x bin/waaseyaa bin/waaseyaa-version bin/verify-deploy-rsync bin/waaseyaa-audit-site"
+        ]
     }
 }
