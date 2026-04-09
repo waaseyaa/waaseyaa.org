@@ -93,7 +93,7 @@ This documentation site runs on Waaseyaa. It uses the SSR package for server-sid
 Here is the recommended path:
 
 1. **[Installation](./installation.md)** — Set up a new project with Composer
-2. **[Your First App](./your-first-app.md)** — Build a content type from scratch
+2. **[Build a Todo App](./your-first-app.md)** — Create a working app with entities, routes, and CRUD in 20 minutes
 3. **[Core Concepts](./concepts.md)** — Understand entities, fields, providers, and the kernel lifecycle
 
 From there, explore the deep-dive guides:

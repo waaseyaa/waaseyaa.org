@@ -134,20 +134,20 @@ Start the built-in development server:
 bin/waaseyaa serve
 ```
 
-This launches a PHP development server on port 8000. Visit [http://localhost:8000](http://localhost:8000) to see the default welcome page.
+This launches a PHP development server on port 8080. Visit [http://localhost:8080](http://localhost:8080) to see the default welcome page.
 
 ## Verify the Installation
 
 ### Check the Welcome Page
 
-Open `http://localhost:8000` in your browser. You should see the Waaseyaa welcome page with links to the admin SPA, API endpoint, and CLI commands.
+Open `http://localhost:8080` in your browser. You should see the Waaseyaa welcome page with links to the admin SPA, API endpoint, and CLI commands.
 
 ### Check the API
 
 The JSON:API endpoint is available at `/api`:
 
 ```bash
-curl http://localhost:8000/api/note \
+curl http://localhost:8080/api/note \
   -H "Content-Type: application/vnd.api+json"
 ```
 
@@ -175,7 +175,7 @@ These commands confirm that the kernel boots, entity types are registered, and t
 Waaseyaa ships with a built-in `core.note` content type that is always available:
 
 ```bash
-curl -X POST http://localhost:8000/api/note \
+curl -X POST http://localhost:8080/api/note \
   -H "Content-Type: application/vnd.api+json" \
   -d '{
     "data": {
@@ -194,5 +194,5 @@ This creates a note entity through the JSON:API endpoint and returns the created
 
 Your Waaseyaa project is ready. Continue with:
 
-- **[Your First App](./your-first-app.md)** — Define a custom entity type and build a page
+- **[Build a Todo App](./your-first-app.md)** — Create a working app with entities, routes, and CRUD in 20 minutes
 - **[Core Concepts](./concepts.md)** — Understand the entity model, service providers, and kernel lifecycle
