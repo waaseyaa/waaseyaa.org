@@ -19,7 +19,7 @@ The full tutorial takes about 20 minutes. You should have a working Waaseyaa pro
 
 ## 1. Define the Entity Class
 
-Create `src/Entity/Todo.php`. Entity classes extend `ContentEntityBase` and declare their type ID and key mappings:
+Create `src/Entity/Todo.php`. Entity classes extend `ContentEntityBase` and **hardcode** `entityTypeId` and `entityKeys` as `protected` properties, then pass them to the parent constructor. That matches how production Waaseyaa apps (and `SqlEntityStorage`) expect subclasses to behave: the subclass constructor should only accept `$values` so storage can instantiate with `new Todo(values: $row)` — it must not declare a parameter named `entityTypeId` unless you intentionally use the generic storage injection path.
 
 ```php
 <?php
@@ -32,13 +32,18 @@ use Waaseyaa\Entity\ContentEntityBase;
 
 class Todo extends ContentEntityBase
 {
+    protected string $entityTypeId = 'todo';
+
+    /** @var array<string, string> */
+    protected array $entityKeys = [
+        'id' => 'id',
+        'uuid' => 'uuid',
+        'label' => 'title',
+    ];
+
     public function __construct(array $values = [])
     {
-        parent::__construct($values, 'todo', [
-            'id' => 'id',
-            'uuid' => 'uuid',
-            'label' => 'title',
-        ]);
+        parent::__construct($values, $this->entityTypeId, $this->entityKeys);
     }
 
     public function isCompleted(): bool

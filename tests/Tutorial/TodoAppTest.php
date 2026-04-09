@@ -269,13 +269,18 @@ final class TodoAppTest extends TestCase
  */
 class TodoEntity extends ContentEntityBase
 {
+    protected string $entityTypeId = 'todo';
+
+    /** @var array<string, string> */
+    protected array $entityKeys = [
+        'id' => 'id',
+        'uuid' => 'uuid',
+        'label' => 'title',
+    ];
+
     public function __construct(array $values = [])
     {
-        parent::__construct($values, 'todo', [
-            'id' => 'id',
-            'uuid' => 'uuid',
-            'label' => 'title',
-        ]);
+        parent::__construct($values, $this->entityTypeId, $this->entityKeys);
     }
 
     public function isCompleted(): bool
