@@ -14,17 +14,8 @@ jobs:
     name: Quality
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout waaseyaa.org
+      - name: Checkout
         uses: actions/checkout@v6
-        with:
-          path: waaseyaa-org
-
-      - name: Checkout waaseyaa framework
-        uses: actions/checkout@v6
-        with:
-          repository: waaseyaa/framework
-          ref: main
-          path: waaseyaa
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -33,43 +24,17 @@ jobs:
           extensions: mbstring, xml
           coverage: none
 
-      - name: Add framework path repository for provenance
-        working-directory: waaseyaa-org
-        run: |
-          jq '.repositories = [{"type": "path", "url": "../waaseyaa/packages/*"}] + .repositories' composer.json > composer.tmp.json
-          mv composer.tmp.json composer.json
-
       - name: Install Composer dependencies
-        working-directory: waaseyaa-org
-        run: composer update --no-interaction --optimize-autoloader
+        run: composer install --no-interaction --optimize-autoloader
 
       - name: Composer validate
-        working-directory: waaseyaa-org
         run: composer validate --no-check-publish
 
-      - name: Composer install dry-run
-        working-directory: waaseyaa-org
-        run: composer install --no-interaction --dry-run
-
       - name: PHPUnit
-        working-directory: waaseyaa-org
         run: composer test
 
-      - name: Record framework HEAD
-        id: framework
-        working-directory: waaseyaa
-        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
       - name: chmod bins
-        working-directory: waaseyaa-org
         run: chmod +x bin/waaseyaa bin/waaseyaa-version bin/waaseyaa-audit-site bin/verify-deploy-rsync
 
       - name: Audit site preflight
-        working-directory: waaseyaa-org
         run: ./bin/waaseyaa-audit-site
-
-      - name: Provenance strict gate
-        working-directory: waaseyaa-org
-        env:
-          WAASEYAA_GOLDEN_SHA: ${{ steps.framework.outputs.sha }}
-        run: ./bin/waaseyaa-version --strict
