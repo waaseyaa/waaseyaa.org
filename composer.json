@@ -44,9 +44,7 @@
         "waaseyaa/validation": "dev-main",
         "waaseyaa/workflows": "dev-main"
     },
-    "repositories": [
-        {"type": "path", "url": "../waaseyaa/packages/*"}
-    ],
+    "repositories": [],
     "autoload": {
         "psr-4": {
             "WaaseyaaOrg\\": "src/"
