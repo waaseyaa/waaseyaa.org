@@ -6,7 +6,7 @@ namespace WaaseyaaOrg\Controller;
 
 use Symfony\Component\HttpFoundation\Request as HttpRequest;
 use Twig\Environment;
-use Waaseyaa\SSR\SsrResponse;
+use Symfony\Component\HttpFoundation\Response;
 use WaaseyaaOrg\Service\DocsRenderer;
 
 final class DocsController
@@ -24,23 +24,23 @@ final class DocsController
         $this->guidesPath = $basePath . '/docs/guides';
     }
 
-    public function landing(array $params, array $query, $account, HttpRequest $request): SsrResponse
+    public function landing(array $params, array $query, $account, HttpRequest $request): Response
     {
         $index = $this->getIndex();
 
-        return new SsrResponse($this->twig->render('docs/landing.html.twig', [
+        return new Response($this->twig->render('docs/landing.html.twig', [
             'path' => '/docs',
             'index' => $index,
         ]));
     }
 
-    public function category(array $params, array $query, $account, HttpRequest $request): SsrResponse
+    public function category(array $params, array $query, $account, HttpRequest $request): Response
     {
         $category = $params['category'] ?? '';
         $index = $this->getIndex();
 
         if (!isset($index[$category])) {
-            return new SsrResponse(
+            return new Response(
                 $this->twig->render('docs/landing.html.twig', [
                     'path' => '/docs',
                     'index' => $index,
@@ -49,7 +49,7 @@ final class DocsController
             );
         }
 
-        return new SsrResponse($this->twig->render('docs/category.html.twig', [
+        return new Response($this->twig->render('docs/category.html.twig', [
             'path' => '/docs/' . $category,
             'index' => $index,
             'category' => $category,
@@ -57,14 +57,14 @@ final class DocsController
         ]));
     }
 
-    public function page(array $params, array $query, $account, HttpRequest $request): SsrResponse
+    public function page(array $params, array $query, $account, HttpRequest $request): Response
     {
         $category = $params['category'] ?? '';
         $slug = $params['slug'] ?? '';
         $index = $this->getIndex();
 
         if (!isset($index[$category])) {
-            return new SsrResponse(
+            return new Response(
                 $this->twig->render('docs/landing.html.twig', ['path' => '/docs', 'index' => $index]),
                 404,
             );
@@ -80,7 +80,7 @@ final class DocsController
         }
 
         if ($pageInfo === null) {
-            return new SsrResponse(
+            return new Response(
                 $this->twig->render('docs/landing.html.twig', ['path' => '/docs', 'index' => $index]),
                 404,
             );
@@ -89,7 +89,7 @@ final class DocsController
         // Load the markdown file
         $markdown = $this->loadMarkdown($category, $slug, $pageInfo['source']);
         if ($markdown === null) {
-            return new SsrResponse(
+            return new Response(
                 $this->twig->render('docs/landing.html.twig', ['path' => '/docs', 'index' => $index]),
                 404,
             );
@@ -111,7 +111,7 @@ final class DocsController
         $prev = ($currentIdx > 0) ? $pages[$currentIdx - 1] : null;
         $next = ($currentIdx < count($pages) - 1) ? $pages[$currentIdx + 1] : null;
 
-        return new SsrResponse($this->twig->render('docs/page.html.twig', [
+        return new Response($this->twig->render('docs/page.html.twig', [
             'path' => '/docs/' . $category . '/' . $slug,
             'index' => $index,
             'category' => $category,

@@ -17,12 +17,12 @@ jobs:
 
     steps:
       - name: Checkout waaseyaa.org
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: waaseyaa-org
 
       - name: Checkout waaseyaa framework
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: waaseyaa/framework
           ref: main
@@ -66,7 +66,7 @@ jobs:
         run: composer global require deployer/deployer --no-interaction
 
       - name: Set up SSH key
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 

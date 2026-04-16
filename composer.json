@@ -6,6 +6,7 @@
     "require": {
         "php": ">=8.4",
         "league/commonmark": "^2.8",
+        "symfony/dotenv": "^8.0",
         "symfony/yaml": "^7.4",
         "waaseyaa/access": "dev-main",
         "waaseyaa/admin-surface": "dev-main",
@@ -73,6 +74,10 @@
     "prefer-stable": true,
     "scripts": {
         "test": "phpunit",
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "PHP_CLI_SERVER_WORKERS=4 bin/waaseyaa serve"
+        ],
         "audit-site": "./bin/waaseyaa-audit-site",
         "post-create-project-cmd": [
             "chmod +x bin/waaseyaa bin/waaseyaa-version bin/verify-deploy-rsync bin/waaseyaa-audit-site"
