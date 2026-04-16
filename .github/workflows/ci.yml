@@ -35,7 +35,9 @@ jobs:
 
       - name: Add framework path repository for provenance
         working-directory: waaseyaa-org
-        run: composer config repositories.framework path '../waaseyaa/packages/*'
+        run: |
+          jq '.repositories = [{"type": "path", "url": "../waaseyaa/packages/*"}] + .repositories' composer.json > composer.tmp.json
+          mv composer.tmp.json composer.json
 
       - name: Install Composer dependencies
         working-directory: waaseyaa-org
