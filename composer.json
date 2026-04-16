@@ -13,6 +13,7 @@
         "waaseyaa/ai-pipeline": "dev-main",
         "waaseyaa/ai-schema": "dev-main",
         "waaseyaa/ai-vector": "dev-main",
+        "waaseyaa/analytics": "dev-main",
         "waaseyaa/api": "dev-main",
         "waaseyaa/cache": "dev-main",
         "waaseyaa/cli": "dev-main",

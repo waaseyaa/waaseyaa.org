@@ -7,6 +7,7 @@ namespace WaaseyaaOrg\Provider;
 use Waaseyaa\Foundation\ServiceProvider\ServiceProvider;
 use Waaseyaa\Routing\RouteBuilder;
 use Waaseyaa\Routing\WaaseyaaRouter;
+use Waaseyaa\SSR\ThemeServiceProvider;
 use WaaseyaaOrg\Command\DocsFetchCommand;
 use WaaseyaaOrg\Service\DocsFetcher;
 use WaaseyaaOrg\Service\DocsNavigationBuilder;
@@ -14,6 +15,16 @@ use WaaseyaaOrg\Service\DocsRenderer;
 
 final class SiteServiceProvider extends ServiceProvider
 {
+    public function boot(): void
+    {
+        $twig = ThemeServiceProvider::getTwigEnvironment();
+        if ($twig !== null) {
+            $analyticsConfig = $this->config['analytics'] ?? [];
+            $twig->addGlobal('umami_tracker_url', (string) ($analyticsConfig['tracker_url'] ?? ''));
+            $twig->addGlobal('umami_site_id', (string) ($analyticsConfig['site_id'] ?? ''));
+        }
+    }
+
     public function register(): void
     {
         $storagePath = dirname(__DIR__, 2) . '/storage/docs';
