@@ -33,9 +33,13 @@ jobs:
           extensions: mbstring, xml
           coverage: none
 
+      - name: Add framework path repository for provenance
+        working-directory: waaseyaa-org
+        run: composer config repositories.framework path '../waaseyaa/packages/*'
+
       - name: Install Composer dependencies
         working-directory: waaseyaa-org
-        run: composer install --no-interaction --optimize-autoloader
+        run: composer update --no-interaction --optimize-autoloader
 
       - name: Composer validate
         working-directory: waaseyaa-org
