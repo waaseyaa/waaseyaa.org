@@ -39,11 +39,21 @@ cd my-site
 
 This installs the skeleton with all core packages: foundation, entity, field, routing, access control, node content types, taxonomy, media, and the CLI.
 
+## Initialize the Database
+
+Create the SQLite database and run all pending migrations:
+
+```bash
+php bin/waaseyaa db:init
+```
+
+This creates `storage/waaseyaa.sqlite` and initializes the framework tables and default entity storage tables.
+
 ## Project Directory Structure
 
 After installation, your project looks like this:
 
-```
+```text
 my-site/
 ├── bin/
 │   └── waaseyaa          # CLI entry point (console kernel)
@@ -66,6 +76,7 @@ my-site/
 │   ├── Seed/             # Dev/local data seeders
 │   └── Support/          # Cross-cutting utilities
 ├── storage/              # Application storage (SQLite DB, caches)
+│   └── waaseyaa.sqlite   # SQLite database (after db:init)
 ├── templates/            # Twig templates for SSR
 │   ├── home.html.twig
 │   ├── page.html.twig
@@ -75,11 +86,11 @@ my-site/
 
 ### Key Directories
 
-- **`src/Provider/`** — Your service providers register routes, entity types, bindings, and middleware
-- **`src/Entity/`** — Custom entity classes extending `ContentEntityBase` or `ConfigEntityBase`
-- **`src/Controller/`** — Thin HTTP controllers that orchestrate domain logic
-- **`config/`** — Framework and application configuration files
-- **`templates/`** — Twig templates rendered by the SSR package
+- **`src/Provider/`** - Your service providers register routes, entity types, bindings, and middleware
+- **`src/Entity/`** - Custom entity classes extending `ContentEntityBase` or `ConfigEntityBase`
+- **`src/Controller/`** - Thin HTTP controllers that orchestrate domain logic
+- **`config/`** - Framework and application configuration files
+- **`templates/`** - Twig templates rendered by the SSR package
 
 ## Configuration
 
@@ -89,7 +100,7 @@ The main configuration file is `config/waaseyaa.php`:
 <?php
 
 return [
-    // SQLite database path (defaults to {projectRoot}/waaseyaa.sqlite)
+    // SQLite database path (defaults to {projectRoot}/storage/waaseyaa.sqlite)
     'database' => null,
 
     // Config sync directory
@@ -120,7 +131,7 @@ Environment variables let you override settings per environment without changing
 
 | Variable | Purpose | Default |
 |---|---|---|
-| `WAASEYAA_DB` | SQLite database path | `{projectRoot}/waaseyaa.sqlite` |
+| `WAASEYAA_DB` | SQLite database path | `{projectRoot}/storage/waaseyaa.sqlite` |
 | `WAASEYAA_CONFIG_DIR` | Config sync directory | `config/sync/` |
 | `WAASEYAA_FILES_DIR` | Uploaded file storage | `storage/files/` |
 | `WAASEYAA_JWT_SECRET` | JWT signing secret for API auth | (empty) |
@@ -131,7 +142,7 @@ Environment variables let you override settings per environment without changing
 Start the built-in development server:
 
 ```bash
-bin/waaseyaa serve
+php bin/waaseyaa serve
 ```
 
 This launches a PHP development server on port 8080. Visit [http://localhost:8080](http://localhost:8080) to see the default welcome page.
@@ -159,13 +170,13 @@ Use the CLI to set up storage and verify the installation:
 
 ```bash
 # List available CLI commands
-bin/waaseyaa list
+php bin/waaseyaa list
 
-# Create entity database tables
-bin/waaseyaa entity:create
+# Create an entity interactively
+php bin/waaseyaa entity:create node
 
 # Export configuration
-bin/waaseyaa config:export
+php bin/waaseyaa config:export
 ```
 
 These commands confirm that the kernel boots, entity types are registered, and the config system works.
@@ -194,5 +205,5 @@ This creates a note entity through the JSON:API endpoint and returns the created
 
 Your Waaseyaa project is ready. Continue with:
 
-- **[Build a Todo App](./your-first-app.md)** — Create a working app with entities, routes, and CRUD in 20 minutes
-- **[Core Concepts](./concepts.md)** — Understand the entity model, service providers, and kernel lifecycle
+- **[Build a Todo App](./your-first-app.md)** - Create a working app with entities, routes, and CRUD in 20 minutes
+- **[Core Concepts](./concepts.md)** - Understand the entity model, service providers, and kernel lifecycle

@@ -1,7 +1,7 @@
 {% extends "base.html.twig" %}
 
 {% block title %}Getting Started{% endblock %}
-{% block description %}Get started with Waaseyaa: create a project, migrate, start the server, and create your first content.{% endblock %}
+{% block description %}Get started with Waaseyaa: create a project, initialize the database, start the server, and create your first content.{% endblock %}
 
 {% block content %}
 <section class="page-header">
@@ -28,9 +28,9 @@ cd my-app</code></pre>
 </section>
 
 <section class="content-section">
-    <h2>Run Migrations</h2>
-    <pre><code class="language-bash">php bin/waaseyaa migrate</code></pre>
-    <p>This creates a SQLite database at <code>waaseyaa.sqlite</code> in your project root and runs all pending migrations. The skeleton ships with entity types for nodes, taxonomy terms, media, menus, and users. All of their tables are created here.</p>
+    <h2>Initialize the Database</h2>
+    <pre><code class="language-bash">php bin/waaseyaa db:init</code></pre>
+    <p>This creates a SQLite database at <code>storage/waaseyaa.sqlite</code> and runs all pending migrations. The skeleton ships with entity types for nodes, taxonomy terms, media, menus, and users. All of their tables are created here.</p>
 </section>
 
 <section class="content-section">
@@ -75,8 +75,8 @@ cd my-app</code></pre>
 │   ├── Domain/               # Domain logic by bounded context
 │   └── Seed/                 # Seeders for dev/local bootstrap
 ├── templates/                # Twig templates
-├── storage/                  # Runtime storage
-└── waaseyaa.sqlite           # SQLite database (after migrate)</code></pre>
+└── storage/
+    └── waaseyaa.sqlite       # SQLite database (after db:init)</code></pre>
     <p>Configuration lives in <code>config/</code>. Your application code goes under <code>src/</code>. The front controller at <code>public/index.php</code> boots the HTTP kernel. The CLI binary at <code>bin/waaseyaa</code> boots the console kernel.</p>
 </section>
 
