@@ -49,18 +49,29 @@ This creates `storage/waaseyaa.sqlite` and initializes the framework tables and 
 
 ## Project Directory Structure
 
-After installation, your project looks like this:
+After installation, your project looks similar to this (trimmed for readability):
 
 ```text
 my-site/
+├── CLAUDE.md
+├── Dockerfile
+├── README.md
 ├── bin/
-│   └── waaseyaa          # CLI entry point (console kernel)
+│   ├── dev.sh                    # Local dev helper used by `composer run dev`
+│   ├── post-create-setup.php     # One-time setup run by Composer after create-project
+│   └── maintenance/              # Contributor/release helper scripts
+├── composer.json
+├── composer.lock
 ├── config/
+│   ├── active            # Active config snapshots
 │   ├── waaseyaa.php      # Framework configuration
 │   ├── entity-types.php  # Custom entity type definitions
 │   ├── services.php      # Service overrides
 │   └── sync/             # Configuration sync directory
+├── docs/
+│   └── local-dev.md
 ├── files/                # Uploaded file storage
+├── phpunit.xml.dist
 ├── public/
 │   └── index.php         # Web entry point (HTTP kernel)
 ├── src/
@@ -74,13 +85,24 @@ my-site/
 │   ├── Seed/             # Dev/local data seeders
 │   └── Support/          # Cross-cutting utilities
 ├── storage/              # Application storage (SQLite DB, caches)
+│   ├── framework/
 │   └── waaseyaa.sqlite   # SQLite database (after db:init)
 ├── templates/            # Twig templates for SSR
 │   ├── home.html.twig
 │   ├── page.html.twig
 │   └── 404.html.twig
-└── composer.json
+├── tests/
+│   ├── Integration/
+│   └── Unit/
+└── vendor/
+    ├── bin/
+    │   └── waaseyaa      # Primary CLI binary
+    └── waaseyaa/
 ```
+
+Use `php vendor/bin/waaseyaa` for all CLI commands. The generated `bin/` directory is for project helpers; it is not the framework CLI entrypoint.
+
+`bin/dev.sh` and `bin/post-create-setup.php` are day-to-day helpers. `bin/maintenance/` is mainly for contributor/release checks and can be ignored while learning.
 
 ### Key Directories
 
@@ -89,6 +111,7 @@ my-site/
 - **`src/Controller/`** - Thin HTTP controllers that orchestrate domain logic
 - **`config/`** - Framework and application configuration files
 - **`templates/`** - Twig templates rendered by the SSR package
+- **`vendor/bin/waaseyaa`** - The Waaseyaa CLI binary (run from project root)
 
 ## Configuration
 
