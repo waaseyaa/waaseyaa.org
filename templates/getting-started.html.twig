@@ -24,33 +24,33 @@
 cd my-app</code></pre>
     <p>The <code>--stability=dev</code> flag is required during the pre-release phase. It goes away at v1.0.</p>
     <p><code>waaseyaa/waaseyaa</code> is the published project skeleton package. The framework source itself lives in the separate <code>waaseyaa/framework</code> monorepo.</p>
-    <p>That scaffolds a full Waaseyaa application from the skeleton. Your project now has config files, a CLI binary, templates, and directory stubs for entities, controllers, and service providers.</p>
+    <p>That scaffolds a full Waaseyaa application from the skeleton. Your project now has config files, the Composer-installed CLI at <code>vendor/bin/waaseyaa</code>, templates, and directory stubs for entities, controllers, and service providers.</p>
 </section>
 
 <section class="content-section">
     <h2>Initialize the Database</h2>
-    <pre><code class="language-bash">php bin/waaseyaa db:init</code></pre>
+    <pre><code class="language-bash">php vendor/bin/waaseyaa db:init</code></pre>
     <p>This creates a SQLite database at <code>storage/waaseyaa.sqlite</code> and runs all pending migrations. The skeleton ships with entity types for nodes, taxonomy terms, media, menus, and users. All of their tables are created here.</p>
 </section>
 
 <section class="content-section">
     <h2>Start the Dev Server</h2>
-    <pre><code class="language-bash">php bin/waaseyaa serve</code></pre>
+    <pre><code class="language-bash">php vendor/bin/waaseyaa serve</code></pre>
     <p>Open <code>http://127.0.0.1:8080</code> in your browser. You should see the Waaseyaa welcome page with links to the admin, API, and documentation.</p>
 </section>
 
 <section class="content-section">
     <h2>Explore Entity Types</h2>
     <p>Open a second terminal. The skeleton ships with 11 entity types out of the box:</p>
-    <pre><code class="language-bash">php bin/waaseyaa entity-type:list</code></pre>
+    <pre><code class="language-bash">php vendor/bin/waaseyaa entity-type:list</code></pre>
     <p>You'll see <code>node</code>, <code>taxonomy_term</code>, <code>media</code>, <code>menu</code>, <code>user</code>, and others. These are the content building blocks that come with the framework packages.</p>
 </section>
 
 <section class="content-section">
     <h2>Create Your First Content</h2>
-    <pre><code class="language-bash">php bin/waaseyaa entity:create node</code></pre>
+    <pre><code class="language-bash">php vendor/bin/waaseyaa entity:create node</code></pre>
     <p>The CLI walks you through setting field values. Once created, verify it exists:</p>
-    <pre><code class="language-bash">php bin/waaseyaa entity:list node</code></pre>
+    <pre><code class="language-bash">php vendor/bin/waaseyaa entity:list node</code></pre>
     <p>Your node is stored in SQLite. You can also view it through the JSON:API:</p>
     <pre><code class="language-bash">curl -s http://localhost:8080/api/node | jq</code></pre>
     <p>That returns a spec-compliant JSON:API response. Filtering, sorting, pagination, and relationship includes all work out of the box. Note that the default access control is deny-unless-granted, so anonymous requests will only see entities that have been explicitly made public.</p>
@@ -59,8 +59,9 @@ cd my-app</code></pre>
 <section class="content-section">
     <h2>Project Structure</h2>
     <pre><code>my-app/
-├── bin/
-│   └── waaseyaa              # CLI binary
+├── vendor/
+│   └── bin/
+│       └── waaseyaa        # CLI (Composer bin from waaseyaa/cli)
 ├── config/
 │   ├── waaseyaa.php          # Framework configuration
 │   ├── entity-types.php      # Custom entity type registration
@@ -77,7 +78,7 @@ cd my-app</code></pre>
 ├── templates/                # Twig templates
 └── storage/
     └── waaseyaa.sqlite       # SQLite database (after db:init)</code></pre>
-    <p>Configuration lives in <code>config/</code>. Your application code goes under <code>src/</code>. The front controller at <code>public/index.php</code> boots the HTTP kernel. The CLI binary at <code>bin/waaseyaa</code> boots the console kernel.</p>
+    <p>Configuration lives in <code>config/</code>. Your application code goes under <code>src/</code>. The front controller at <code>public/index.php</code> boots the HTTP kernel. Run CLI commands with <code>php vendor/bin/waaseyaa</code> from the project root (same contract as Laravel’s <code>artisan</code> / Symfony’s <code>bin/console</code>).</p>
 </section>
 
 <section class="content-section">

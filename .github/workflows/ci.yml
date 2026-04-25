@@ -34,7 +34,7 @@ jobs:
         run: composer test
 
       - name: chmod bins
-        run: chmod +x bin/waaseyaa bin/waaseyaa-version bin/waaseyaa-audit-site bin/verify-deploy-rsync
+        run: chmod +x bin/waaseyaa-version bin/waaseyaa-audit-site bin/verify-deploy-rsync
 
       - name: Audit site preflight
         run: ./bin/waaseyaa-audit-site

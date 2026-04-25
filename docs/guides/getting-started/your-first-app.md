@@ -169,7 +169,7 @@ The `routes()` method uses the `RouteBuilder` fluent API to define four routes. 
 After creating the provider, rebuild the manifest so the kernel discovers it:
 
 ```bash
-bin/waaseyaa optimize:manifest
+php vendor/bin/waaseyaa optimize:manifest
 ```
 
 ## 4. Create the Controller
@@ -356,7 +356,7 @@ Notice how `toggle()` and `delete()` receive a fully loaded `Todo` entity as a p
 Start the development server:
 
 ```bash
-bin/waaseyaa serve
+php vendor/bin/waaseyaa serve
 ```
 
 Visit [http://localhost:8080/todos](http://localhost:8080/todos). You should see an empty todo list with a form to add new items. Try it out:

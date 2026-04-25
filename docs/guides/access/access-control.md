@@ -129,7 +129,7 @@ This policy grants view access to everyone, restricts update and delete to users
 Policies are discovered automatically via the `#[PolicyAttribute]` PHP attribute. The `PackageManifestCompiler` scans your `src/Access/` directory for classes with this attribute. After adding a new policy, rebuild the manifest:
 
 ```bash
-bin/waaseyaa optimize:manifest
+php vendor/bin/waaseyaa optimize:manifest
 ```
 
 This compiles discovery results into a cached manifest so the framework does not need runtime reflection.

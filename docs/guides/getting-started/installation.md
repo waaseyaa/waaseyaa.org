@@ -44,7 +44,7 @@ This installs the skeleton with all core packages: foundation, entity, field, ro
 Create the SQLite database and run all pending migrations:
 
 ```bash
-php bin/waaseyaa db:init
+php vendor/bin/waaseyaa db:init
 ```
 
 This creates `storage/waaseyaa.sqlite` and initializes the framework tables and default entity storage tables.
@@ -142,7 +142,7 @@ Environment variables let you override settings per environment without changing
 Start the built-in development server:
 
 ```bash
-php bin/waaseyaa serve
+php vendor/bin/waaseyaa serve
 ```
 
 This launches a PHP development server on port 8080. Visit [http://localhost:8080](http://localhost:8080) to see the default welcome page.
@@ -170,13 +170,13 @@ Use the CLI to set up storage and verify the installation:
 
 ```bash
 # List available CLI commands
-php bin/waaseyaa list
+php vendor/bin/waaseyaa list
 
 # Create an entity interactively
-php bin/waaseyaa entity:create node
+php vendor/bin/waaseyaa entity:create node
 
 # Export configuration
-php bin/waaseyaa config:export
+php vendor/bin/waaseyaa config:export
 ```
 
 These commands confirm that the kernel boots, entity types are registered, and the config system works.

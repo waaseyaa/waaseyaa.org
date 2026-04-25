@@ -246,7 +246,7 @@ This is useful when importing data with known IDs from another system.
 The entity storage package manages database schema automatically. When you add a new entity type or modify field definitions, run the CLI to create or update tables:
 
 ```bash
-bin/waaseyaa entity:create
+php vendor/bin/waaseyaa entity:create
 ```
 
 This reads all registered entity type definitions and creates the corresponding database tables.

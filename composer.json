@@ -76,11 +76,11 @@
         "test": "phpunit",
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "PHP_CLI_SERVER_WORKERS=4 bin/waaseyaa serve"
+            "PHP_CLI_SERVER_WORKERS=4 php vendor/bin/waaseyaa serve"
         ],
         "audit-site": "./bin/waaseyaa-audit-site",
         "post-create-project-cmd": [
-            "chmod +x bin/waaseyaa bin/waaseyaa-version bin/verify-deploy-rsync bin/waaseyaa-audit-site"
+            "chmod +x bin/waaseyaa-version bin/verify-deploy-rsync bin/waaseyaa-audit-site"
         ]
     }
 }

@@ -234,7 +234,7 @@ Singletons are resolved once and reused. Bindings create a fresh instance on eve
 The kernel is the entry point for every request. Waaseyaa provides two kernels:
 
 - **`HttpKernel`** handles web requests (`public/index.php`)
-- **`ConsoleKernel`** handles CLI commands (`bin/waaseyaa`)
+- **`ConsoleKernel`** handles CLI commands (`php vendor/bin/waaseyaa`)
 
 Both extend `AbstractKernel` from the `waaseyaa/foundation` package.
 
@@ -261,7 +261,7 @@ This sequence runs on every HTTP request. Steps 2-5 are cached after the first b
 The `PackageManifestCompiler` scans your application for providers, access policies, and middleware using PHP attributes. After adding new providers or policies, rebuild the manifest:
 
 ```bash
-bin/waaseyaa optimize:manifest
+php vendor/bin/waaseyaa optimize:manifest
 ```
 
 This compiles discovery results into a cached manifest, avoiding runtime reflection.

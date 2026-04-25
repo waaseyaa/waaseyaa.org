@@ -37,6 +37,8 @@
 | `optimize-autoloader` | Pass |
 | `bin/waaseyaa-version` | **Added** in this convergence pass |
 | `bin/waaseyaa-audit-site` | **Added** in this convergence pass |
+
+**Update (2026):** Project-local `bin/waaseyaa` was removed. Use `php vendor/bin/waaseyaa` from the project root; see [docs/CLI.md](../CLI.md).
 | `post-create-project-cmd` | N/A — not created from skeleton installer |
 
 ## 3. Entity and provider audit
