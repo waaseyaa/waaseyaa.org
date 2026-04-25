@@ -24,5 +24,6 @@ A second copy under `bin/` duplicates the framework binary, can drift from `vend
 
 ## Deploy / CI
 
-- Production deploy hooks use `php vendor/bin/waaseyaa …` (see `deploy.php`).
+- **Manifest:** `php vendor/bin/waaseyaa optimize:manifest` (minimal console; no DB).
+- **Docs cache:** `php scripts/docs-fetch-deploy.php` with optional `GITHUB_TOKEN` — used in production instead of `docs:fetch` so deploy does not require a booted kernel with content types in SQLite.
 - `bin/waaseyaa-audit-site` checks that `vendor/bin/waaseyaa` exists after `composer install`.

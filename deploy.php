@@ -25,9 +25,9 @@ task('deploy:upload', function (): void {
     ]);
 });
 
-desc('Compile package manifest into shared storage (required before docs:fetch)');
+desc('Compile package manifest into shared storage (minimal console; no DB)');
 task('waaseyaa:optimize-manifest', function (): void {
-    run('cd {{release_path}} && WAASEYAA_DB={{deploy_path}}/shared/storage/waaseyaa.sqlite php vendor/bin/waaseyaa optimize:manifest');
+    run('cd {{release_path}} && php vendor/bin/waaseyaa optimize:manifest');
 });
 
 desc('Reload PHP-FPM to pick up new release');
@@ -35,10 +35,10 @@ task('php-fpm:reload', function (): void {
     run('sudo systemctl reload php8.4-fpm');
 });
 
-desc('Fetch package READMEs and build docs navigation index');
+desc('Fetch package READMEs and build docs navigation index (no full kernel boot)');
 task('docs:fetch', function (): void {
     $token = getenv('GITHUB_TOKEN') ?: '';
-    run('cd {{release_path}} && WAASEYAA_DB={{deploy_path}}/shared/storage/waaseyaa.sqlite GITHUB_TOKEN=' . escapeshellarg($token) . ' php vendor/bin/waaseyaa docs:fetch');
+    run('cd {{release_path}} && GITHUB_TOKEN=' . escapeshellarg($token) . ' php scripts/docs-fetch-deploy.php');
 });
 
 desc('Deploy waaseyaa.org to production');
