@@ -260,6 +260,8 @@ class TodoController
 }
 ```
 
+The controller should not concatenate or heredoc HTML. All markup lives in Twig templates; PHP only loads data, persists entities, and returns `Response` objects (including the result of `$this->twig->render(...)`).
+
 The controller has four actions. `list()` loads all todos and renders a Twig template. `create()` reads the form submission and persists a new `Todo` entity. `toggle()` flips the completed state using the entity's own method. `delete()` removes the entity from storage. All mutation actions redirect back to the list.
 
 Notice how `toggle()` and `delete()` receive a fully loaded `Todo` entity as a parameter. The routing system's parameter upcaster handled the database lookup. If the entity does not exist, the framework returns a 404 automatically.
@@ -330,7 +332,24 @@ curl -X POST http://localhost:8080/api/todo \
   }'
 ```
 
-## 7. Create the Twig Template
+## 7. Create the Twig Templates
+
+Put all HTML in Twig. A small partial keeps each todo row defined once (no duplicated markup between pending and completed lists).
+
+Create `templates/todo/_todo_row.html.twig`:
+
+```twig
+<li class="{{ completed ? 'todo done' : 'todo' }}">
+  <form method="POST" action="/todos/{{ todo.id }}/toggle" style="display:inline">
+    <button type="submit">{{ completed ? 'Undo' : 'Done' }}</button>
+  </form>
+  <span class="title">{{ todo.label }}</span>
+  <span class="priority">{{ todo.get('priority') ?? 'normal' }}</span>
+  <form method="POST" action="/todos/{{ todo.id }}/delete" style="display:inline">
+    <button type="submit">Delete</button>
+  </form>
+</li>
+```
 
 Create `templates/todo/list.html.twig`:
 
@@ -341,6 +360,9 @@ Create `templates/todo/list.html.twig`:
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Todos</title>
+  <style>
+    li.done .title { text-decoration: line-through; color: #999; }
+  </style>
 </head>
 <body>
   <h1>Todos</h1>
@@ -360,35 +382,18 @@ Create `templates/todo/list.html.twig`:
   {% if pending is not empty %}
     <h2>Pending</h2>
     <ul>
-    {% for todo in pending %}
-      <li>
-        <form method="POST" action="/todos/{{ todo.id }}/toggle" style="display:inline">
-          <button type="submit">Done</button>
-        </form>
-        <span>{{ todo.label }}</span>
-        <span>{{ todo.get('priority') ?? 'normal' }}</span>
-        <form method="POST" action="/todos/{{ todo.id }}/delete" style="display:inline">
-          <button type="submit">Delete</button>
-        </form>
-      </li>
-    {% endfor %}
+      {% for todo in pending %}
+        {% include 'todo/_todo_row.html.twig' with { todo: todo, completed: false } %}
+      {% endfor %}
     </ul>
   {% endif %}
 
   {% if completed is not empty %}
     <h2>Completed</h2>
     <ul>
-    {% for todo in completed %}
-      <li>
-        <form method="POST" action="/todos/{{ todo.id }}/toggle" style="display:inline">
-          <button type="submit">Undo</button>
-        </form>
-        <span style="text-decoration: line-through; color: #999">{{ todo.label }}</span>
-        <form method="POST" action="/todos/{{ todo.id }}/delete" style="display:inline">
-          <button type="submit">Delete</button>
-        </form>
-      </li>
-    {% endfor %}
+      {% for todo in completed %}
+        {% include 'todo/_todo_row.html.twig' with { todo: todo, completed: true } %}
+      {% endfor %}
     </ul>
   {% endif %}
 
@@ -399,7 +404,7 @@ Create `templates/todo/list.html.twig`:
 </html>
 ```
 
-This template is the view rendered by `TodoController::list()` in step 4.
+These templates are what `TodoController::list()` renders in step 4.
 
 ## What You Built
 
