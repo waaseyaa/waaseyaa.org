@@ -38,7 +38,8 @@ task('php-fpm:reload', function (): void {
 desc('Fetch package READMEs and build docs navigation index');
 task('docs:fetch', function (): void {
     $token = getenv('GITHUB_TOKEN') ?: '';
-    run('cd {{release_path}} && GITHUB_TOKEN=' . escapeshellarg($token) . ' php vendor/bin/waaseyaa docs:fetch');
+    // Point at shared DB: kernel may resolve default sqlite path relative to vendor before .env applies.
+    run('cd {{release_path}} && WAASEYAA_DB={{deploy_path}}/shared/storage/waaseyaa.sqlite GITHUB_TOKEN=' . escapeshellarg($token) . ' php vendor/bin/waaseyaa docs:fetch');
 });
 
 desc('Deploy waaseyaa.org to production');
