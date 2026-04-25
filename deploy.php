@@ -25,9 +25,9 @@ task('deploy:upload', function (): void {
     ]);
 });
 
-desc('Clear Waaseyaa framework manifest cache');
-task('waaseyaa:clear-manifest', function (): void {
-    run('rm -f {{release_path}}/storage/framework/packages.php');
+desc('Compile package manifest into shared storage (required before docs:fetch)');
+task('waaseyaa:optimize-manifest', function (): void {
+    run('cd {{release_path}} && WAASEYAA_DB={{deploy_path}}/shared/storage/waaseyaa.sqlite php vendor/bin/waaseyaa optimize:manifest');
 });
 
 desc('Reload PHP-FPM to pick up new release');
@@ -38,7 +38,6 @@ task('php-fpm:reload', function (): void {
 desc('Fetch package READMEs and build docs navigation index');
 task('docs:fetch', function (): void {
     $token = getenv('GITHUB_TOKEN') ?: '';
-    // Point at shared DB: kernel may resolve default sqlite path relative to vendor before .env applies.
     run('cd {{release_path}} && WAASEYAA_DB={{deploy_path}}/shared/storage/waaseyaa.sqlite GITHUB_TOKEN=' . escapeshellarg($token) . ' php vendor/bin/waaseyaa docs:fetch');
 });
 
@@ -51,8 +50,8 @@ task('deploy', [
     'deploy:upload',
     'deploy:shared',
     'deploy:writable',
+    'waaseyaa:optimize-manifest',
     'docs:fetch',
-    'waaseyaa:clear-manifest',
     'deploy:symlink',
     'deploy:unlock',
     'deploy:cleanup',
