@@ -321,7 +321,7 @@ Create `templates/todo/list.html.twig`:
 
 Create `src/Controller/TodoController.php`. The job here is small: read the request, get **storage** for the `todo` type, call **save** / **delete**, and return a **Response** (Twig HTML or a redirect). No heredoc HTML.
 
-**App controller entry point:** routes that use a `Class::method` string (as in this tutorial) are handled by the SSR app-controller pipeline. The dispatcher calls **each** action method with **four** arguments: `(array $params, array $query, AccountInterface $account, Request $httpRequest)`—not action-only type hints. Use `$httpRequest` for form and body input; **route** parameters (including upcasted entities) appear in **`$params`**. The loaded `{todo}` entity is at `$params['todo']` when the route has `->entityParameter('todo', 'todo')`.
+**App controller entry point:** routes that use a `Class::method` string (as in this tutorial) are handled by the SSR app-controller pipeline. The dispatcher calls **each** action method with **four** arguments: `(array $params, array $query, AccountInterface $account, Request $httpRequest)`—not action-only type hints. Use `$httpRequest` for form and body input; **path** parameters appear in **`$params`**. For `->entityParameter('todo', 'todo')`, the matched `{todo}` segment is still the **string (or int) id** in this pipeline—it is **not** automatically upcast to a `Todo` object—so the controller should **load** the entity from storage (see `resolveRouteTodo` below) or a future central param converter.
 
 ```php
 <?php
@@ -411,8 +411,8 @@ class TodoController
         AccountInterface $account,
         Request $httpRequest,
     ): Response {
-        $todo = $params['todo'] ?? null;
-        if (!$todo instanceof Todo) {
+        $todo = $this->resolveRouteTodo($params);
+        if ($todo === null) {
             return new RedirectResponse('/todos');
         }
 
@@ -433,8 +433,8 @@ class TodoController
         AccountInterface $account,
         Request $httpRequest,
     ): Response {
-        $todo = $params['todo'] ?? null;
-        if (!$todo instanceof Todo) {
+        $todo = $this->resolveRouteTodo($params);
+        if ($todo === null) {
             return new RedirectResponse('/todos');
         }
 
@@ -443,10 +443,26 @@ class TodoController
 
         return new RedirectResponse('/todos');
     }
+
+    /** @param array<string, mixed> $params */
+    private function resolveRouteTodo(array $params): ?Todo
+    {
+        $raw = $params['todo'] ?? null;
+        if ($raw instanceof Todo) {
+            return $raw;
+        }
+        if ((!is_int($raw) && !is_string($raw)) || (is_string($raw) && $raw === '')) {
+            return null;
+        }
+
+        $loaded = $this->entityTypeManager->getStorage('todo')->load($raw);
+
+        return $loaded instanceof Todo ? $loaded : null;
+    }
 }
 ```
 
-`toggle` and `delete` read **`$params['todo']`**: the router has already upcast the `{todo}` path segment to a `Todo`, or the request is a 404 before your method runs. The explicit `instanceof` guard keeps static analysis and PHPStan happy; you can omit it in small apps if you prefer.
+`toggle` and `delete` use **`resolveRouteTodo`** so a **string id** from the URL (the normal case) is **loaded** into a `Todo` before save/delete. If the id is invalid, the method redirects home without changing data.
 
 **Why `enforceIsNew()` on create?** You set field values and then save; the framework must know you mean a **new** row. Calling `enforceIsNew()` means “treat the next save as an insert.”
 
