@@ -36,15 +36,23 @@ namespace App\Entity;
 
 use Waaseyaa\Entity\ContentEntityBase;
 
+/**
+ * Content entity for one todo row. Storage constructs this as `new Todo(values: $row)`,
+ * so the constructor must stay `array $values` only (no extra constructor params).
+ */
 class Todo extends ContentEntityBase
 {
+    /** Machine name of this entity type (matches `EntityType` id in config). */
     protected string $entityTypeId = 'todo';
 
-    /** @var array<string, string> */
+    /**
+     * Maps logical roles (id, uuid, human label) to field/column names in storage.
+     * @var array<string, string>
+     */
     protected array $entityKeys = [
         'id' => 'id',
         'uuid' => 'uuid',
-        'label' => 'title',
+        'label' => 'title', // `label` role → `title` field (used by APIs and admin UI)
     ];
 
     public function __construct(array $values = [])
@@ -57,6 +65,7 @@ class Todo extends ContentEntityBase
         return (bool) $this->get('completed');
     }
 
+    /** Flip the boolean `completed` field and return `$this` for fluent chaining. */
     public function toggleCompleted(): static
     {
         return $this->set('completed', !$this->isCompleted());
@@ -77,9 +86,10 @@ declare(strict_types=1);
 
 use Waaseyaa\Entity\EntityType;
 
+// Return a list of EntityType value objects; the kernel merges this with other packages.
 return [
     new EntityType(
-        id: 'todo',
+        id: 'todo', // URL segment and storage key, e.g. `/api/todo`
         label: 'Todo',
         class: \App\Entity\Todo::class,
         keys: [
@@ -123,6 +133,7 @@ use Waaseyaa\Foundation\ServiceProvider\ServiceProvider;
 use Waaseyaa\Routing\RouteBuilder;
 use Waaseyaa\Routing\WaaseyaaRouter;
 
+/** Registers HTTP routes for the tutorial todo UI (not entity type definitions — those live in config). */
 class TodoServiceProvider extends ServiceProvider
 {
     public function register(): void
@@ -134,31 +145,31 @@ class TodoServiceProvider extends ServiceProvider
         WaaseyaaRouter $router,
         ?\Waaseyaa\Entity\EntityTypeManager $entityTypeManager = null,
     ): void {
-        // List all todos
+        // GET /todos — list page (Twig).
         $router->addRoute('todo.list', RouteBuilder::create('/todos')
             ->controller('App\Controller\TodoController::list')
             ->methods('GET')
-            ->allowAll()
+            ->allowAll() // Public read; tighten with permissions in a real app.
             ->build());
 
-        // Create a new todo (form submission)
+        // POST /todos — create from HTML form (`title`, `priority`).
         $router->addRoute('todo.create', RouteBuilder::create('/todos')
             ->controller('App\Controller\TodoController::create')
             ->methods('POST')
             ->allowAll()
-            ->csrfExempt()
+            ->csrfExempt() // Tutorial only — use CSRF tokens in production.
             ->build());
 
-        // Toggle a todo's completed status
+        // POST /todos/{id}/toggle — `{todo}` is upcast to a `Todo` entity instance.
         $router->addRoute('todo.toggle', RouteBuilder::create('/todos/{todo}/toggle')
             ->controller('App\Controller\TodoController::toggle')
-            ->entityParameter('todo', 'todo')
+            ->entityParameter('todo', 'todo') // param name in path must match first arg name here
             ->methods('POST')
             ->allowAll()
             ->csrfExempt()
             ->build());
 
-        // Delete a todo
+        // POST /todos/{id}/delete
         $router->addRoute('todo.delete', RouteBuilder::create('/todos/{todo}/delete')
             ->controller('App\Controller\TodoController::delete')
             ->entityParameter('todo', 'todo')
@@ -177,6 +188,7 @@ The POST routes are `csrfExempt()` in this tutorial for simplicity. For producti
 After creating the provider, rebuild the manifest so the kernel discovers it:
 
 ```bash
+# Compile provider discovery (and related manifest data) so new routes are picked up.
 php vendor/bin/waaseyaa optimize:manifest
 ```
 
@@ -198,6 +210,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Twig\Environment;
 use Waaseyaa\Entity\EntityTypeManagerInterface;
 
+/**
+ * HTTP layer only: load/save entities, return redirects or Twig-rendered HTML.
+ * Do not build HTML strings here — that belongs in `templates/todo/*.twig`.
+ */
 class TodoController
 {
     public function __construct(
@@ -208,8 +224,9 @@ class TodoController
     public function list(): Response
     {
         $storage = $this->entityTypeManager->getStorage('todo');
-        $todos = $storage->loadMultiple();
+        $todos = $storage->loadMultiple(); // All rows for this type (tutorial keeps it simple).
 
+        // Split for the template: pending first, then completed (reindexed for clean `for` loops).
         $pending = array_filter($todos, fn (Todo $t) => !$t->isCompleted());
         $completed = array_filter($todos, fn (Todo $t) => $t->isCompleted());
 
@@ -224,9 +241,9 @@ class TodoController
 
     public function create(Request $request): Response
     {
-        $title = trim($request->request->get('title', ''));
+        $title = trim((string) $request->request->get('title', ''));
         if ($title === '') {
-            return new RedirectResponse('/todos');
+            return new RedirectResponse('/todos'); // Silent reject empty title (tighten in a real app).
         }
 
         $storage = $this->entityTypeManager->getStorage('todo');
@@ -235,7 +252,7 @@ class TodoController
             'completed' => false,
             'priority' => $request->request->get('priority', 'normal'),
         ]);
-        $todo->enforceIsNew();
+        $todo->enforceIsNew(); // INSERT, not UPDATE — required when values are set before first save.
         $storage->save($todo);
 
         return new RedirectResponse('/todos');
@@ -243,7 +260,7 @@ class TodoController
 
     public function toggle(Todo $todo): Response
     {
-        $todo->toggleCompleted();
+        $todo->toggleCompleted(); // Domain logic stays on the entity.
         $storage = $this->entityTypeManager->getStorage('todo');
         $storage->save($todo);
 
@@ -253,7 +270,7 @@ class TodoController
     public function delete(Todo $todo): Response
     {
         $storage = $this->entityTypeManager->getStorage('todo');
-        $storage->delete([$todo]);
+        $storage->delete([$todo]); // API matches framework: delete accepts an array of entities.
 
         return new RedirectResponse('/todos');
     }
@@ -273,6 +290,7 @@ Notice how `toggle()` and `delete()` receive a fully loaded `Todo` entity as a p
 Start the development server:
 
 ```bash
+# PHP built-in server + Waaseyaa kernel (default port 8080 unless your project overrides it).
 php vendor/bin/waaseyaa serve
 ```
 
@@ -293,43 +311,54 @@ Waaseyaa's API package automatically generates JSON:API endpoints for registered
 Try it from the command line:
 
 ```bash
-# List all todos
+# List all todos (anonymous GET is allowed for generated JSON:API collection routes).
 curl http://localhost:8080/api/todo \
   -H "Content-Type: application/vnd.api+json"
+```
 
-# Create a todo via the API (requires an authenticated account/session)
+Create a todo via the API (requires an authenticated account/session). Body is JSON:API `application/vnd.api+json`:
+
+```json
+{
+  "data": {
+    "type": "todo",
+    "attributes": {
+      "title": "Call the plumber",
+      "completed": false,
+      "priority": "high"
+    }
+  }
+}
+```
+
+```bash
+# Pipe or paste the JSON body; `-d @file.json` is handy for larger payloads.
 curl -X POST http://localhost:8080/api/todo \
   -H "Content-Type: application/vnd.api+json" \
-  -d '{
-    "data": {
-      "type": "todo",
-      "attributes": {
-        "title": "Call the plumber",
-        "completed": false,
-        "priority": "high"
-      }
-    }
-  }'
+  -d '{"data":{"type":"todo","attributes":{"title":"Call the plumber","completed":false,"priority":"high"}}}'
 ```
 
 If you are not authenticated, the POST endpoint returns an authentication error by default. You can still use `GET /api/todo` anonymously.
 
 After authenticating, refresh your browser. The todo you created via the API appears in the list. The HTML interface and the JSON:API share the same entity storage, so changes from either side are immediately visible.
 
-You can also test an invalid payload to see error behavior:
+You can also test an invalid payload to see error behavior (missing required `title`):
+
+```json
+{
+  "data": {
+    "type": "todo",
+    "attributes": {
+      "completed": false
+    }
+  }
+}
+```
 
 ```bash
-# Missing required title (authenticated request) -> validation error response
 curl -X POST http://localhost:8080/api/todo \
   -H "Content-Type: application/vnd.api+json" \
-  -d '{
-    "data": {
-      "type": "todo",
-      "attributes": {
-        "completed": false
-      }
-    }
-  }'
+  -d '{"data":{"type":"todo","attributes":{"completed":false}}}'
 ```
 
 ## 7. Create the Twig Templates
@@ -339,6 +368,7 @@ Put all HTML in Twig. A small partial keeps each todo row defined once (no dupli
 Create `templates/todo/_todo_row.html.twig`:
 
 ```twig
+{# One row: included from list.html.twig with `todo` and `completed` (bool). #}
 <li class="{{ completed ? 'todo done' : 'todo' }}">
   <form method="POST" action="/todos/{{ todo.id }}/toggle" style="display:inline">
     <button type="submit">{{ completed ? 'Undo' : 'Done' }}</button>
@@ -354,6 +384,7 @@ Create `templates/todo/_todo_row.html.twig`:
 Create `templates/todo/list.html.twig`:
 
 ```twig
+{# Full page shell: add form posts to the same routes registered in TodoServiceProvider. #}
 <!doctype html>
 <html lang="en">
 <head>
@@ -361,6 +392,7 @@ Create `templates/todo/list.html.twig`:
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Todos</title>
   <style>
+    {# Strikethrough for completed items (class `done` set on <li> in the partial). #}
     li.done .title { text-decoration: line-through; color: #999; }
   </style>
 </head>
@@ -383,6 +415,7 @@ Create `templates/todo/list.html.twig`:
     <h2>Pending</h2>
     <ul>
       {% for todo in pending %}
+        {# Reuse one partial; `completed` toggles label + CSS class. #}
         {% include 'todo/_todo_row.html.twig' with { todo: todo, completed: false } %}
       {% endfor %}
     </ul>
@@ -421,6 +454,7 @@ These are not required for the tutorial, but they reflect current framework capa
 For real apps, move beyond `allowAll()` routes and enforce entity access with `#[PolicyAttribute]` policies. After adding policy classes, rebuild the package manifest:
 
 ```bash
+# Same command as step 3 — run whenever discovery inputs change (providers, policies, etc.).
 php vendor/bin/waaseyaa optimize:manifest
 ```
 
