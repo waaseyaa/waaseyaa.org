@@ -337,6 +337,6 @@ See the [AI Overview](../ai/ai-overview.md) for details on how the AI packages w
 
 ## Next Steps
 
-- **[Routing Guide](./routing.md)** — Route to your entities with controllers and middleware
+- **[Routing Guide](./routing-guide.md)** — Route to your entities with controllers and middleware
 - **[Access Control](../access/access-control.md)** — Protect entity operations with policies
 - **[Your First App](../getting-started/your-first-app.md)** — A hands-on walkthrough

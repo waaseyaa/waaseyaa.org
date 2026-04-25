@@ -64,8 +64,8 @@ Each example shows a different pattern: a static page, an entity view page, and 
 | `entityParameter(string $name, string $entityType)` | Upcast a URL parameter to an entity |
 | `requirePermission(string $permission)` | Require a specific permission |
 | `requireRole(string $role)` | Require a specific role |
-| `requireAuth()` | Require an authenticated user |
-| `public()` | Mark route as publicly accessible (no access check) |
+| `requireAuthentication()` | Require an authenticated user |
+| `allowAll()` | Mark route as publicly accessible (no access check) |
 | `render(bool $enabled)` | Enable SSR rendering for this route |
 | `csrfExempt()` | Exempt from CSRF token validation |
 | `jsonApi()` | Mark as a JSON:API route |
@@ -91,14 +91,14 @@ class BlogServiceProvider extends ServiceProvider
         $router->addRoute('blog.list', RouteBuilder::create('/blog')
             ->controller('App\Controller\BlogController::list')
             ->methods('GET')
-            ->public()
+            ->allowAll()
             ->build());
 
         $router->addRoute('blog.view', RouteBuilder::create('/blog/{node}')
             ->controller('App\Controller\BlogController::view')
             ->entityParameter('node', 'node')
             ->methods('GET')
-            ->public()
+            ->allowAll()
             ->build());
 
         $router->addRoute('blog.create', RouteBuilder::create('/blog/new')
@@ -147,12 +147,12 @@ Waaseyaa integrates access control directly into route definitions.
 
 ### Public Routes
 
-Routes marked as `public()` bypass all access checks:
+Routes marked as `allowAll()` bypass all access checks:
 
 ```php
 RouteBuilder::create('/about')
     ->controller('App\Controller\PageController::about')
-    ->public()
+    ->allowAll()
     ->build();
 ```
 
@@ -191,7 +191,7 @@ Require any authenticated user without checking specific permissions:
 ```php
 RouteBuilder::create('/dashboard')
     ->controller('App\Controller\DashboardController::index')
-    ->requireAuth()
+    ->requireAuthentication()
     ->build();
 ```
 

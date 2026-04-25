@@ -300,5 +300,5 @@ You can swap implementations for testing (using in-memory backends) or extend be
 ## Next Steps
 
 - **[Entity System](../core/entity-system.md)** — Deep dive into entity types, revisions, and translations
-- **[Routing Guide](../core/routing.md)** — The RouteBuilder API, middleware, and access control
+- **[Routing Guide](../core/routing-guide.md)** — The RouteBuilder API, middleware, and access control
 - **[Access Control](../access/access-control.md)** — The deny-unless-granted permission model

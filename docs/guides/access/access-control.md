@@ -186,7 +186,7 @@ The `AccessChecker` enforces access at the route level using options set through
 ```php
 // Public: no access check
 RouteBuilder::create('/about')
-    ->public()
+    ->allowAll()
     ->build();
 
 // Permission-based
@@ -201,7 +201,7 @@ RouteBuilder::create('/admin/settings')
 
 // Authentication required
 RouteBuilder::create('/dashboard')
-    ->requireAuth()
+    ->requireAuthentication()
     ->build();
 ```
 
@@ -322,6 +322,6 @@ This grants update access when the current user is the entity's author. Other us
 
 ## Next Steps
 
-- **[Routing Guide](../core/routing.md)** — Route-level access options in detail
+- **[Routing Guide](../core/routing-guide.md)** — Route-level access options in detail
 - **[Entity System](../core/entity-system.md)** — The entities that policies protect
 - **[AI Overview](../ai/ai-overview.md)** — How AI agents respect access control

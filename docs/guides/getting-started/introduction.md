@@ -99,6 +99,6 @@ Here is the recommended path:
 From there, explore the deep-dive guides:
 
 - [Entity System](../core/entity-system.md) — Typed fields, revisions, translations
-- [Routing Guide](../core/routing.md) — RouteBuilder, controllers, middleware
+- [Routing Guide](../core/routing-guide.md) — RouteBuilder, controllers, middleware
 - [Access Control](../access/access-control.md) — The deny-unless-granted model
 - [AI Overview](../ai/ai-overview.md) — Schema, pipeline, agent, and vector packages
