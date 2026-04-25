@@ -182,7 +182,7 @@ php vendor/bin/waaseyaa optimize:manifest
 
 ## 4. Create the Controller
 
-Create `src/Controller/TodoController.php`. Controllers are thin orchestration layers that receive the request and return a response:
+Create `src/Controller/TodoController.php`. Controllers are thin orchestration layers that receive the request and return a response. This tutorial renders with Twig from the start (not inline HTML in controllers):
 
 ```php
 <?php
@@ -195,12 +195,14 @@ use App\Entity\Todo;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Twig\Environment;
 use Waaseyaa\Entity\EntityTypeManagerInterface;
 
 class TodoController
 {
     public function __construct(
         private readonly EntityTypeManagerInterface $entityTypeManager,
+        private readonly Environment $twig,
     ) {}
 
     public function list(): Response
@@ -208,7 +210,14 @@ class TodoController
         $storage = $this->entityTypeManager->getStorage('todo');
         $todos = $storage->loadMultiple();
 
-        $html = $this->render($todos);
+        $pending = array_filter($todos, fn (Todo $t) => !$t->isCompleted());
+        $completed = array_filter($todos, fn (Todo $t) => $t->isCompleted());
+
+        $html = $this->twig->render('todo/list.html.twig', [
+            'todos' => $todos,
+            'pending' => array_values($pending),
+            'completed' => array_values($completed),
+        ]);
 
         return new Response($html);
     }
@@ -248,112 +257,10 @@ class TodoController
 
         return new RedirectResponse('/todos');
     }
-
-    private function render(array $todos): string
-    {
-        $pending = array_filter($todos, fn (Todo $t) => !$t->isCompleted());
-        $completed = array_filter($todos, fn (Todo $t) => $t->isCompleted());
-
-        $html = <<<'HTML'
-        <!doctype html>
-        <html lang="en">
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>Todos</title>
-          <style>
-            * { box-sizing: border-box; margin: 0; padding: 0; }
-            body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
-            h1 { margin-bottom: 1.5rem; }
-            h2 { font-size: 1rem; color: #666; margin: 1.5rem 0 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
-            form.add { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-            form.add input[type="text"] { flex: 1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
-            form.add select { padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
-            form.add button { padding: 0.5rem 1rem; background: #0d4f4f; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
-            form.add button:hover { background: #0f766e; }
-            ul { list-style: none; }
-            li { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid #eee; }
-            li.done .title { text-decoration: line-through; color: #999; }
-            .title { flex: 1; }
-            .priority { font-size: 0.75rem; padding: 0.15rem 0.4rem; border-radius: 3px; background: #e5e7eb; color: #374151; }
-            .priority.high { background: #fee2e2; color: #991b1b; }
-            .priority.low { background: #dbeafe; color: #1e40af; }
-            .btn { padding: 0.25rem 0.5rem; border: 1px solid #ccc; border-radius: 4px; background: white; cursor: pointer; font-size: 0.85rem; }
-            .btn:hover { background: #f3f4f6; }
-            .btn.delete { color: #dc2626; border-color: #fca5a5; }
-            .btn.delete:hover { background: #fef2f2; }
-            .empty { color: #999; padding: 1rem 0; }
-            .count { color: #666; font-size: 0.9rem; margin-bottom: 1rem; }
-          </style>
-        </head>
-        <body>
-          <h1>Todos</h1>
-
-          <form class="add" method="POST" action="/todos">
-            <input type="text" name="title" placeholder="What needs to be done?" required>
-            <select name="priority">
-              <option value="normal">Normal</option>
-              <option value="high">High</option>
-              <option value="low">Low</option>
-            </select>
-            <button type="submit">Add</button>
-          </form>
-        HTML;
-
-        $totalCount = count($todos);
-        $pendingCount = count($pending);
-        $html .= sprintf('<p class="count">%d item%s, %d remaining</p>', $totalCount, $totalCount === 1 ? '' : 's', $pendingCount);
-
-        if ($pending !== []) {
-            $html .= '<h2>Pending</h2><ul>';
-            foreach ($pending as $todo) {
-                $html .= $this->renderTodoItem($todo);
-            }
-            $html .= '</ul>';
-        }
-
-        if ($completed !== []) {
-            $html .= '<h2>Completed</h2><ul>';
-            foreach ($completed as $todo) {
-                $html .= $this->renderTodoItem($todo);
-            }
-            $html .= '</ul>';
-        }
-
-        if ($todos === []) {
-            $html .= '<p class="empty">No todos yet. Add one above.</p>';
-        }
-
-        $html .= '</body></html>';
-
-        return $html;
-    }
-
-    private function renderTodoItem(Todo $todo): string
-    {
-        $id = $todo->id();
-        $title = htmlspecialchars($todo->label());
-        $doneClass = $todo->isCompleted() ? ' done' : '';
-        $toggleLabel = $todo->isCompleted() ? 'Undo' : 'Done';
-        $priority = htmlspecialchars($todo->get('priority') ?? 'normal');
-
-        return <<<HTML
-        <li class="todo{$doneClass}">
-          <form method="POST" action="/todos/{$id}/toggle" style="display:inline">
-            <button class="btn" type="submit">{$toggleLabel}</button>
-          </form>
-          <span class="title">{$title}</span>
-          <span class="priority {$priority}">{$priority}</span>
-          <form method="POST" action="/todos/{$id}/delete" style="display:inline">
-            <button class="btn delete" type="submit">Delete</button>
-          </form>
-        </li>
-        HTML;
-    }
 }
 ```
 
-The controller has four actions. `list()` loads all todos and renders inline HTML. `create()` reads the form submission and persists a new `Todo` entity. `toggle()` flips the completed state using the entity's own method. `delete()` removes the entity from storage. All mutation actions redirect back to the list.
+The controller has four actions. `list()` loads all todos and renders a Twig template. `create()` reads the form submission and persists a new `Todo` entity. `toggle()` flips the completed state using the entity's own method. `delete()` removes the entity from storage. All mutation actions redirect back to the list.
 
 Notice how `toggle()` and `delete()` receive a fully loaded `Todo` entity as a parameter. The routing system's parameter upcaster handled the database lookup. If the entity does not exist, the framework returns a 404 automatically.
 
@@ -423,9 +330,9 @@ curl -X POST http://localhost:8080/api/todo \
   }'
 ```
 
-## 7. Use Twig Templates (Optional)
+## 7. Create the Twig Template
 
-The inline HTML works, but for a real application you would use Twig templates. Create `templates/todo/list.html.twig`:
+Create `templates/todo/list.html.twig`:
 
 ```twig
 <!doctype html>
@@ -492,37 +399,7 @@ The inline HTML works, but for a real application you would use Twig templates. 
 </html>
 ```
 
-Then update `TodoController::list()` to render the template. Inject Twig through the constructor:
-
-```php
-use Twig\Environment;
-
-public function __construct(
-    private readonly EntityTypeManagerInterface $entityTypeManager,
-    private readonly Environment $twig,
-) {}
-```
-
-And update `list()`:
-
-```php
-public function list(): Response
-{
-    $storage = $this->entityTypeManager->getStorage('todo');
-    $todos = $storage->loadMultiple();
-
-    $pending = array_filter($todos, fn (Todo $t) => !$t->isCompleted());
-    $completed = array_filter($todos, fn (Todo $t) => $t->isCompleted());
-
-    $html = $this->twig->render('todo/list.html.twig', [
-        'todos' => $todos,
-        'pending' => array_values($pending),
-        'completed' => array_values($completed),
-    ]);
-
-    return new Response($html);
-}
-```
+This template is the view rendered by `TodoController::list()` in step 4.
 
 ## What You Built
 
