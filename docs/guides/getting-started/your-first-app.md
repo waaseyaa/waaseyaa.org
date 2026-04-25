@@ -17,6 +17,12 @@ In this tutorial you will build a working todo application from scratch. By the 
 
 The full tutorial takes about 20 minutes. You should have a working Waaseyaa project before starting. If you do not, follow the [Installation](./installation.md) guide first.
 
+## Current Defaults (Read First)
+
+Waaseyaa uses a **deny-by-default** route model. Every route must opt into access (`allowAll()`, `requireAuthentication()`, `requirePermission()`, etc.), or it will be denied.
+
+This tutorial keeps routes public so you can focus on entity and routing fundamentals first. In production, you should tighten access and avoid broad CSRF exemptions unless a route is intentionally machine-to-machine (for example, webhooks).
+
 ## 1. Define the Entity Class
 
 Create `src/Entity/Todo.php`. Entity classes extend `ContentEntityBase` and **hardcode** `entityTypeId` and `entityKeys` as `protected` properties, then pass them to the parent constructor. That matches how production Waaseyaa apps (and `SqlEntityStorage`) expect subclasses to behave: the subclass constructor should only accept `$values` so storage can instantiate with `new Todo(values: $row)` — it must not declare a parameter named `entityTypeId` unless you intentionally use the generic storage injection path.
@@ -164,7 +170,9 @@ class TodoServiceProvider extends ServiceProvider
 }
 ```
 
-The `routes()` method uses the `RouteBuilder` fluent API to define four routes. `allowAll()` marks them as public (no authentication required). `entityParameter()` tells the router to automatically load a `Todo` entity from the URL parameter, so your controller receives the entity object directly.
+The `routes()` method uses the `RouteBuilder` fluent API to define four routes. `allowAll()` marks them as publicly accessible (no authentication required). `entityParameter()` tells the router to automatically load a `Todo` entity from the URL parameter, so your controller receives the entity object directly.
+
+The POST routes are `csrfExempt()` in this tutorial for simplicity. For production forms, keep CSRF protection enabled and submit a token from your form or frontend client.
 
 After creating the provider, rebuild the manifest so the kernel discovers it:
 
@@ -380,7 +388,7 @@ Try it from the command line:
 curl http://localhost:8080/api/todo \
   -H "Content-Type: application/vnd.api+json"
 
-# Create a todo via the API
+# Create a todo via the API (requires an authenticated account/session)
 curl -X POST http://localhost:8080/api/todo \
   -H "Content-Type: application/vnd.api+json" \
   -d '{
@@ -395,7 +403,25 @@ curl -X POST http://localhost:8080/api/todo \
   }'
 ```
 
-Refresh your browser. The todo you created via the API appears in the list. The HTML interface and the JSON:API share the same entity storage, so changes from either side are immediately visible.
+If you are not authenticated, the POST endpoint returns an authentication error by default. You can still use `GET /api/todo` anonymously.
+
+After authenticating, refresh your browser. The todo you created via the API appears in the list. The HTML interface and the JSON:API share the same entity storage, so changes from either side are immediately visible.
+
+You can also test an invalid payload to see error behavior:
+
+```bash
+# Missing required title (authenticated request) -> validation error response
+curl -X POST http://localhost:8080/api/todo \
+  -H "Content-Type: application/vnd.api+json" \
+  -d '{
+    "data": {
+      "type": "todo",
+      "attributes": {
+        "completed": false
+      }
+    }
+  }'
+```
 
 ## 7. Use Twig Templates (Optional)
 
@@ -466,7 +492,18 @@ The inline HTML works, but for a real application you would use Twig templates. 
 </html>
 ```
 
-Then update `TodoController::list()` to render the template:
+Then update `TodoController::list()` to render the template. Inject Twig through the constructor:
+
+```php
+use Twig\Environment;
+
+public function __construct(
+    private readonly EntityTypeManagerInterface $entityTypeManager,
+    private readonly Environment $twig,
+) {}
+```
+
+And update `list()`:
 
 ```php
 public function list(): Response
@@ -493,9 +530,32 @@ You defined a `Todo` entity with typed fields. You registered it as an entity ty
 
 That is the pattern for every Waaseyaa application: define your entities, register routes, wire a controller.
 
+## Optional: Production-Grade Next Steps
+
+These are not required for the tutorial, but they reflect current framework capabilities.
+
+### Add Access Policies
+
+For real apps, move beyond `allowAll()` routes and enforce entity access with `#[PolicyAttribute]` policies. After adding policy classes, rebuild the package manifest:
+
+```bash
+php vendor/bin/waaseyaa optimize:manifest
+```
+
+See the [Access Control](../access/access-control.md) guide for full policy patterns.
+
+### Add Revisions and Translations
+
+When your content model needs editorial history or multilingual content, extend the entity type with revision and language keys and enable:
+
+- `revisionable: true`
+- `translatable: true`
+
+The [Entity System](../core/entity-system.md) guide shows the full key map (`bundle`, `revision`, `langcode`) and storage implications.
+
 ## Next Steps
 
 - **[Core Concepts](./concepts.md)** to understand the full entity/field model, service provider lifecycle, and kernel architecture
 - **[Entity System](../core/entity-system.md)** for revisions, translations, and all field types
-- **[Routing Guide](../core/routing.md)** for advanced routing with permissions, middleware, and URL generation
+- **[Routing Guide](../core/routing-guide.md)** for advanced routing with permissions, middleware, and URL generation
 - **[Access Control](../access/access-control.md)** to add authentication and authorization to your routes
