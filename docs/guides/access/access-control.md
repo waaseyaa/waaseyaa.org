@@ -5,8 +5,6 @@ order: 100
 description: Understanding the deny-unless-granted permission model
 ---
 
-# Access Control Guide
-
 The `waaseyaa/access` package provides permission-based access control built on a **deny-unless-granted** model. Every operation is denied by default unless an access policy explicitly grants it. This guide covers the access model, policies, field-level permissions, and how to check access in controllers and templates.
 
 ## The Access Model

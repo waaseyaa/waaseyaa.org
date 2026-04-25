@@ -5,8 +5,6 @@ order: 4
 description: Understanding entities, fields, service providers, and the kernel lifecycle
 ---
 
-# Core Concepts
-
 This guide covers the foundational concepts every Waaseyaa developer needs: the entity/field model, service providers, the kernel lifecycle, and the package system.
 
 ## The Entity/Field Model

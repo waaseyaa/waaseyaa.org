@@ -5,8 +5,6 @@ order: 3
 description: Build a working todo app from scratch with Waaseyaa
 ---
 
-# Tutorial: Build a Todo App
-
 In about 20 minutes you will have a small **todo list** in the browser: add tasks, mark them done, delete them, and (optionally) talk to the same data over JSON:API.
 
 **Prerequisites:** a working Waaseyaa app from the [Installation](./installation.md) guide.

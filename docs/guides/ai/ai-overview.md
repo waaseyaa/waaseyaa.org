@@ -5,8 +5,6 @@ order: 100
 description: How the AI packages work together for intelligent applications
 ---
 
-# AI Overview
-
 Waaseyaa is AI-native. Entity schemas automatically generate structured tool definitions. AI agents can create, read, update, and query content through typed interfaces. This guide covers the four AI packages and how they work together.
 
 ## The Four AI Packages

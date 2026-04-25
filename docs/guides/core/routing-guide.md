@@ -5,8 +5,6 @@ order: 101
 description: Route definitions, controllers, middleware, and URL generation
 ---
 
-# Routing Guide
-
 The `waaseyaa/routing` package wraps Symfony Routing with a fluent `RouteBuilder` API. It adds route-level access control, entity parameter upcasting, and language negotiation middleware.
 
 ## RouteBuilder Fluent API

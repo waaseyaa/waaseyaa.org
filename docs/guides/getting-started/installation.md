@@ -5,8 +5,6 @@ order: 2
 description: Set up a new Waaseyaa project with Composer
 ---
 
-# Installation
-
 This guide walks you through creating a new Waaseyaa project from the official skeleton.
 
 ## Prerequisites

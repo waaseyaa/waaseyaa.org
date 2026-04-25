@@ -5,8 +5,6 @@ order: 100
 description: Deep dive into entities, typed fields, revisions, and translations
 ---
 
-# Entity System
-
 The entity system is the heart of Waaseyaa. It provides a structured, typed content model with revisions, translations, and dynamic fields. This guide covers the `waaseyaa/entity` and `waaseyaa/field` packages in depth.
 
 ## Entity Type Definitions
