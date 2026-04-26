@@ -256,7 +256,7 @@ final class ArticleController
 
 Constructor parameters are resolved from Waaseyaa’s controller rules (same allowlist style as action services). Action parameters use **typed injection only**—the legacy four-argument `(array $params, array $query, AccountInterface $account, Request $request)` contract is **removed**; use `Request`, `#[MapRoute]`, or explicit entity types instead.
 
-> **Transitional note:** you may still encounter older controllers in the wild (including some first-party sites mid-migration) that list `array $params` / `array $query`. Treat this guide as the contract for **new** application code; migrate legacy actions when you touch them.
+> **Transitional note:** third-party or long-lived apps may still list `array $params` / `array $query` while being modernized. Prefer typed actions for all new code; migrate legacy signatures when you touch them.
 
 ## Language Negotiation Middleware
 

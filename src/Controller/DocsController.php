@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace WaaseyaaOrg\Controller;
 
-use Symfony\Component\HttpFoundation\Request as HttpRequest;
-use Twig\Environment;
 use Symfony\Component\HttpFoundation\Response;
+use Twig\Environment;
 use WaaseyaaOrg\Service\DocsRenderer;
 
 final class DocsController
@@ -24,7 +23,7 @@ final class DocsController
         $this->guidesPath = $basePath . '/docs/guides';
     }
 
-    public function landing(array $params, array $query, $account, HttpRequest $request): Response
+    public function landing(): Response
     {
         $index = $this->getIndex();
 
@@ -34,9 +33,8 @@ final class DocsController
         ]));
     }
 
-    public function category(array $params, array $query, $account, HttpRequest $request): Response
+    public function category(string $category): Response
     {
-        $category = $params['category'] ?? '';
         $index = $this->getIndex();
 
         if (!isset($index[$category])) {
@@ -57,10 +55,8 @@ final class DocsController
         ]));
     }
 
-    public function page(array $params, array $query, $account, HttpRequest $request): Response
+    public function page(string $category, string $slug): Response
     {
-        $category = $params['category'] ?? '';
-        $slug = $params['slug'] ?? '';
         $index = $this->getIndex();
 
         if (!isset($index[$category])) {
@@ -70,7 +66,6 @@ final class DocsController
             );
         }
 
-        // Find the page in the index
         $pageInfo = null;
         foreach ($index[$category]['pages'] as $p) {
             if ($p['slug'] === $slug) {
@@ -86,7 +81,6 @@ final class DocsController
             );
         }
 
-        // Load the markdown file
         $markdown = $this->loadMarkdown($category, $slug, $pageInfo['source']);
         if ($markdown === null) {
             return new Response(
@@ -98,7 +92,6 @@ final class DocsController
         $parsed = $this->renderer->parseFrontmatter($markdown);
         $html = $this->renderer->renderMarkdown($parsed['body']);
 
-        // Build prev/next within the same category
         $pages = $index[$category]['pages'];
         $currentIdx = null;
         foreach ($pages as $i => $p) {
@@ -136,7 +129,8 @@ final class DocsController
             return [];
         }
 
-        $this->index = json_decode(file_get_contents($indexFile), true) ?? [];
+        $this->index = json_decode((string) file_get_contents($indexFile), true) ?? [];
+
         return $this->index;
     }
 
@@ -157,6 +151,8 @@ final class DocsController
             return null;
         }
 
-        return file_get_contents($realPath);
+        $contents = file_get_contents($realPath);
+
+        return $contents === false ? null : $contents;
     }
 }
