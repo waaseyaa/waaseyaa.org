@@ -296,8 +296,6 @@ Create `src/Controller/TodoController.php`. SSR **app controllers** registered a
   - **Scalars / backed enums** — from route attributes; invalid values → **400** (`InvalidAppControllerArgumentException`).
   - **`#[MapRoute]` / `#[MapQuery]`** — opt-in bags for the **entire** route params or query arrays when you really need them (strict mode discourages implicit “grab everything” signatures).
 
-The legacy **`(array $params, array $query, AccountInterface $account, Request $request)`** four-argument contract is **removed**—do not use it in new code.
-
 ```php
 <?php
 
