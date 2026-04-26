@@ -56,6 +56,21 @@ The `keys` array maps logical roles to column names:
 
 Not all keys are required. A simple entity may only need `id`, `uuid`, and `label`.
 
+## Class-level metadata (content entities)
+
+Content entity classes can declare **`#[ContentEntityType(id: 'machine_name')]`** and **`#[ContentEntityKeys(...)]`** (`waaseyaa/entity`). At construction time, `ContentEntityBase`:
+
+1. Reads merged metadata for the concrete class (child attributes override parents).
+2. Fills omitted logical keys (`id`, `uuid`, `label`) with identity defaults when not present on the attribute.
+3. Throws **`EntityMetadataException`** if a concrete subclass still has no resolvable type id (every public content entity class must declare `#[ContentEntityType]`).
+
+**Strict registration:** when you register an `EntityType` whose PHP `class` extends `ContentEntityBase`, `EntityTypeManager` asserts:
+
+- The class carries `#[ContentEntityType]` and its `id` matches the registered `EntityType::id()`.
+- The sorted **`keys`** array on the `EntityType` matches the sorted keys resolved from class attributes.
+
+Keep `config/entity-types.php` (or provider-registered types) aligned with the attributes on your entity class.
+
 ## Entity Base Classes
 
 Waaseyaa provides three base classes for entities.
@@ -82,6 +97,8 @@ abstract class EntityBase implements EntityInterface
 
 When an entity type declares a `uuid` key, the UUID is auto-generated on construction using `Symfony\Component\Uid\Uuid::v4()`.
 
+For **content** subclasses, prefer **`#[ContentEntityType]`** / **`#[ContentEntityKeys]`** on the class instead of assigning `$entityTypeId` / `$entityKeys` in PHP properties—`ContentEntityBase` hydrates those values from metadata.
+
 ### ContentEntityBase
 
 Extends `EntityBase` with fieldable capabilities. Use this for user-created content:
@@ -98,6 +115,8 @@ abstract class ContentEntityBase extends EntityBase
     public function getFieldDefinitions(): array;
 }
 ```
+
+Declare **`#[ContentEntityType]`** / **`#[ContentEntityKeys]`** on the concrete class instead of duplicating `$entityTypeId` / `$entityKeys` properties—`ContentEntityBase` merges attributes into the constructor path automatically.
 
 A content entity object represents one language at a time. Calling `getTranslation()` returns a separate entity object for the requested language rather than embedding all translations in a single object.
 
@@ -241,13 +260,13 @@ This is useful when importing data with known IDs from another system.
 
 ### Schema Management
 
-The entity storage package manages database schema automatically. When you add a new entity type or modify field definitions, run the CLI to create or update tables:
+The entity storage package materializes SQL tables from registered `EntityType` definitions during kernel boot (and migrations cover framework-owned tables). After you change `config/entity-types.php` or add migrations, run:
 
 ```bash
-php vendor/bin/waaseyaa entity:create
+php vendor/bin/waaseyaa migrate
 ```
 
-This reads all registered entity type definitions and creates the corresponding database tables.
+Use `php vendor/bin/waaseyaa schema:check` when you need to detect drift between definitions and the live database.
 
 ## Revisions
 

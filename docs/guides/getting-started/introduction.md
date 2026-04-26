@@ -80,7 +80,7 @@ Three meta-packages provide convenient installation:
 | `waaseyaa/routing` | Symfony-based routing with fluent RouteBuilder API |
 | `waaseyaa/access` | Permission-based access control with policy handlers |
 | `waaseyaa/config` | Configuration management with import/export |
-| `waaseyaa/ssr` | Twig-based server-side rendering with theme support |
+| `waaseyaa/ssr` | Twig SSR, themes, and typed `Class::method` app controllers (`AppControllerMethodInvoker`) |
 | `waaseyaa/ai-schema` | JSON Schema generation from entity definitions |
 | `waaseyaa/ai-agent` | AI agent orchestration with tool execution |
 

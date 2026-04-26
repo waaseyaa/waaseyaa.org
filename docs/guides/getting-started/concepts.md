@@ -61,20 +61,24 @@ Waaseyaa has two kinds of entities:
 - **Config entities** (`ConfigEntityBase`) store site configuration like content types, vocabularies, and workflows. They are exported to YAML and synced between environments.
 
 ```php
-// Content entity: stores user content
-class Article extends ContentEntityBase
-{
-    protected string $entityTypeId = 'article';
-    protected array $entityKeys = ['id' => 'id', 'uuid' => 'uuid', 'label' => 'title'];
-}
+// Content entity: declare machine name + key map on the class (PHP 8 attributes).
+use Waaseyaa\Entity\Attribute\ContentEntityKeys;
+use Waaseyaa\Entity\Attribute\ContentEntityType;
+use Waaseyaa\Entity\ContentEntityBase;
 
-// Config entity: defines structure
+#[ContentEntityType(id: 'article')]
+#[ContentEntityKeys(label: 'title')]
+class Article extends ContentEntityBase {}
+
+// Config entity: still uses explicit type id + keys on the class today
 class ArticleType extends ConfigEntityBase
 {
     protected string $entityTypeId = 'article_type';
     protected array $entityKeys = ['id' => 'id', 'label' => 'label'];
 }
 ```
+
+Content entities resolve `entityTypeId` / `entityKeys` from attributes (with inheritance) when you omit them from `new Article([...])`. Registered `EntityType` definitions must agree with that metadata—see the [Entity system](../core/entity-system.md) guide.
 
 Content entities use auto-increment integer IDs. Config entities use string IDs and are exported/imported through the config sync system.
 
@@ -247,8 +251,8 @@ Both extend `AbstractKernel` from the `waaseyaa/foundation` package.
 6. Router matches the request to a route
 7. Middleware pipeline executes (authentication, CSRF, etc.)
 8. AccessChecker evaluates route access options
-9. Parameter upcasters convert route params to entities
-10. Controller method executes and returns Response
+9. SSR dispatches `Class::method` app controllers through `AppControllerMethodInvoker`, which builds typed action arguments (services, `Request`, route entities, scalars, `#[MapRoute]` / `#[MapQuery]` bags)
+10. Controller method executes and returns `Response` (or an Inertia page object)
 11. Response sent to the client
 ```
 

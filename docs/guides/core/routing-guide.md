@@ -59,7 +59,8 @@ Each example shows a different pattern: a static page, an entity view page, and 
 | `create(string $path)` | Start building a route for the given path |
 | `controller(string\|callable $controller)` | Set the controller (class::method or callable) |
 | `methods(string ...$methods)` | Set allowed HTTP methods (GET, POST, etc.) |
-| `entityParameter(string $name, string $entityType)` | Upcast a URL parameter to an entity |
+| `entityParameter(string $name, string $entityType)` | Mark a path placeholder as `entity:{type}` for typed SSR binding |
+| `bind(string $name, string $class)` | Require loaded entity for `{name}` to satisfy `class-string` |
 | `requirePermission(string $permission)` | Require a specific permission |
 | `requireRole(string $role)` | Require a specific role |
 | `requireAuthentication()` | Require an authenticated user |
@@ -110,34 +111,27 @@ class BlogServiceProvider extends ServiceProvider
 
 The first argument to `addRoute()` is a unique route name used for URL generation and debugging.
 
-## Entity Parameter Upcasting
+## Entity route segments (`entityParameter`)
 
-When you call `entityParameter()`, the router automatically:
+`RouteBuilder::entityParameter($name, $entityTypeId)` stores metadata on the Symfony `Route` so the path placeholder `{name}` is treated as **`entity:{entityTypeId}`**. Extraction still happens during routing, but **loading** happens later when Waaseyaa dispatches an SSR **app controller** (`Waaseyaa\SSR\SsrPageHandler::dispatchAppController`):
 
-1. Extracts the parameter value from the URL
-2. Loads the entity from storage
-3. Injects the fully loaded entity object into the controller
+1. The matched route supplies raw attribute values (e.g. `{ "article" => "42" }`).
+2. `AppControllerMethodInvoker` sees an action parameter typed as `Article` (implements `EntityInterface`) and loads via `EntityTypeManagerInterface::getStorage($entityTypeId)->load($rawId)`.
+3. A successful load passes the entity instance into your method; failures become HTTP errors (see **Typed app controllers** below).
+
+Optional **`->bind('article', Article::class)`** records `_waaseyaa_app_bindings['article'] = Article::class` so, after load, Waaseyaa verifies `is_a($entity, Article::class)`—handy when multiple PHP classes could back the same storage row.
 
 ```php
-// Route definition
-$route = RouteBuilder::create('/articles/{article}')
+$router->addRoute('article.view', RouteBuilder::create('/articles/{article}')
     ->controller('App\Controller\ArticleController::view')
     ->entityParameter('article', 'article')
-    ->build();
-
-// Controller receives a loaded entity, not a raw ID
-class ArticleController
-{
-    public function view(Article $article): Response
-    {
-        // $article is already loaded from the database.
-        // If the entity doesn't exist, a 404 is returned automatically.
-        return new Response($article->label());
-    }
-}
+    ->bind('article', \App\Entity\Article::class)
+    ->methods('GET')
+    ->allowAll()
+    ->build());
 ```
 
-The parameter name in the route path (`{article}`) must match the parameter name in `entityParameter('article', ...)`. The second argument is the entity type ID.
+The `{article}` placeholder name, the `entityParameter` name, the optional `bind` name, and the **`$article` type-hint** must line up (or use `#[FromRoute('custom')]` on the parameter—see framework spec).
 
 ## Route-Level Access Control
 
@@ -207,36 +201,62 @@ The `AccessChecker` evaluates route access options in order:
 
 This is a **deny-by-default** model. If you forget to add access options to a route, it will be inaccessible. This is intentional.
 
-## Controller Method Signatures
+## Typed app controllers (SSR `Class::method`)
 
-Controllers are plain PHP classes. Waaseyaa resolves method parameters from the route match and the service container:
+SSR routes that point at **`App\Controller\…::method`** strings are **not** Symfony controller services. Waaseyaa builds the controller instance (constructor injection via reflection + optional service resolver), then invokes the action through **`Waaseyaa\SSR\Http\AppController\AppControllerMethodInvoker`**.
+
+### What the invoker supports
+
+| Parameter kind | How it resolves |
+|----------------|-----------------|
+| **Framework services** | `Symfony\Component\HttpFoundation\Request`, `Waaseyaa\Access\AccountInterface`, `Waaseyaa\Entity\EntityTypeManagerInterface` / `EntityTypeManager`, `Twig\Environment`, `Waaseyaa\Access\Gate\GateInterface` (when configured), plus exact types returned by your HTTP service resolver |
+| **Content entities** | Type-hint `Article`, `Todo`, … **implements `EntityInterface`** + matching `entityParameter()` on the route + `#[ContentEntityType]` on the class (strict mode) |
+| **Scalars & backed enums** | From the route attribute named after the parameter (camelCase → snake_case fallback) or an explicit **`#[FromRoute('segment')]`** attribute on the parameter |
+| **Whole bags** | `#[MapRoute]` on `array $params`, `#[MapQuery]` on `array $query` — opt-in; strict mode avoids implicit “everything” signatures |
+
+Duplicate identical service types in one method signature are invalid in **strict** mode. Strict mode defaults **on** (`config['app_controller']['strict']` or `WAASEYAA_APP_CONTROLLER_STRICT`).
+
+### Error semantics (dispatch)
+
+| Situation | Exception | Typical HTTP |
+|-----------|-----------|----------------|
+| Entity id missing / not found | `Symfony\Component\Routing\Exception\ResourceNotFoundException` | **404** |
+| Scalar / enum cannot be cast | `InvalidAppControllerArgumentException` | **400** |
+| Binding / reflection programmer error | `InvalidAppControllerBindingException`, `AppControllerTypeMismatchException` | **500** |
+
+Exact response shapes (JSON:API vs HTML) follow existing middleware conventions for `_render` routes—see the framework spec [app-controller-invocation](https://github.com/waaseyaa/framework/blob/main/docs/specs/app-controller-invocation.md).
+
+### Example controller
 
 ```php
-class ArticleController
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+final class ArticleController
 {
-    // Constructor injection from the container
     public function __construct(
         private readonly EntityTypeManagerInterface $entityTypeManager,
     ) {}
 
-    // Route parameters are injected by name
     public function view(Article $article): Response
     {
         return new Response($article->label());
     }
 
-    // Request object is always available
     public function create(Request $request): Response
     {
         if ($request->isMethod('POST')) {
-            // Handle form submission
+            // read $request->request / $request->query
         }
+
         return new Response('Create form');
     }
 }
 ```
 
-Constructor parameters come from the service container. Method parameters come from the route match (entity upcasting) or the Symfony `Request` object.
+Constructor parameters are resolved from Waaseyaa’s controller rules (same allowlist style as action services). Action parameters use **typed injection only**—the legacy four-argument `(array $params, array $query, AccountInterface $account, Request $request)` contract is **removed**; use `Request`, `#[MapRoute]`, or explicit entity types instead.
+
+> **Transitional note:** you may still encounter older controllers in the wild (including some first-party sites mid-migration) that list `array $params` / `array $query`. Treat this guide as the contract for **new** application code; migrate legacy actions when you touch them.
 
 ## Language Negotiation Middleware
 

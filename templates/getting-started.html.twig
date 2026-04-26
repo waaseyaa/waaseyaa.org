@@ -20,8 +20,8 @@
 
 <section class="content-section">
     <h2>Create a New Project</h2>
-    <pre><code class="language-bash">composer create-project waaseyaa/waaseyaa my-app --stability=dev
-cd my-app</code></pre>
+    <pre><code class="language-bash">composer create-project waaseyaa/waaseyaa my-site --stability=dev
+cd my-site</code></pre>
     <p>The <code>--stability=dev</code> flag is required during the pre-release phase. It goes away at v1.0.</p>
     <p><code>waaseyaa/waaseyaa</code> is the published project skeleton package. The framework source itself lives in the separate <code>waaseyaa/framework</code> monorepo.</p>
     <p>That scaffolds a full Waaseyaa application from the skeleton. Your project now has config files, the Composer-installed CLI at <code>vendor/bin/waaseyaa</code>, templates, and directory stubs for entities, controllers, and service providers.</p>
@@ -58,7 +58,7 @@ cd my-app</code></pre>
 
 <section class="content-section">
     <h2>Project Structure</h2>
-    <pre><code>my-app/
+    <pre><code>my-site/
 ├── vendor/
 │   └── bin/
 │       └── waaseyaa        # CLI (Composer bin from waaseyaa/cli)

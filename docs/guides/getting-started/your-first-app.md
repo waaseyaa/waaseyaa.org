@@ -7,7 +7,7 @@ description: Build a working todo app from scratch with Waaseyaa
 
 In about 20 minutes you will have a small **todo list** in the browser: add tasks, mark them done, delete them, and (optionally) talk to the same data over JSON:API.
 
-**Prerequisites:** a working Waaseyaa app from the [Installation](./installation.md) guide.
+**Prerequisites:** complete the [Installation](./installation.md) guide first, including `php vendor/bin/waaseyaa db:init`, so SQLite exists and core migrations have run. The examples below use the project directory name `my-site` (from `composer create-project waaseyaa/waaseyaa my-site`); adjust paths if you used a different folder name.
 
 ## How this tutorial is organized
 
@@ -17,9 +17,9 @@ You will do things in the order Waaseyaa projects are usually built:
 |------|----------|----------------|
 | **1** | A `Todo` **entity class** | One PHP object = one row of todo data, with a little behavior (complete / toggle). |
 | **2** | **Config** in `config/entity-types.php` | Tells the framework the fields (`title`, `completed`, …) and which class to use. |
-| **3** | A **service provider** with **routes** | Maps URLs like `/todos` to controller methods. |
+| **3** | A **service provider** with **routes** | Maps URLs like `/todos` to controller methods and marks `{todo}` as an entity segment. |
 | **4** | **Twig** templates | All HTML lives here—not in the controller. |
-| **5** | A **controller** | Loads and saves `Todo` entities, returns a Twig page or a redirect. |
+| **5** | A **controller** | Typed SSR actions: the framework loads `Todo` from the URL when you type-hint it—no manual `load()`. |
 | **5.1** | An **access policy** for `todo` | JSON:API applies *view* / *create* access checks; a small policy makes public API behavior match your `allowAll()` web routes. |
 | **6** | **Run** the dev server and try the UI | Confirms the loop works. |
 | **7** | **JSON:API** (optional in practice, built-in) | The same `todo` type is also available at `/api/todo` for tools and clients. |
@@ -37,9 +37,11 @@ Waaseyaa routes are **deny-by-default** unless you opt in (for example with `all
 
 **What you do in this step:** add `src/Entity/Todo.php` with:
 
-- A **type id** so the framework knows *which* kind of content this is (`'todo'`).
-- A small **keys** map so Waaseyaa knows which fields play the roles of *primary id*, *uuid*, and *human-readable title* (here, the `title` field is the “label” people see in lists and APIs).
+- **`#[ContentEntityType(id: 'todo')]`** — the machine name must match `id` in `config/entity-types.php` (next step) and is required for **typed route binding** (step 5).
+- **`#[ContentEntityKeys(label: 'title')]`** — maps the logical **label** key to your `title` field. Omitted keys (`id`, `uuid`, …) default to sensible identity column names; override them on the attribute if your storage uses different names (see [Entity system](../core/entity-system.md)).
 - A couple of **methods** for behavior (`isCompleted`, `toggleCompleted`).
+
+**No** `$entityTypeId` / `$entityKeys` properties and **no** custom constructor: `ContentEntityBase` merges class attributes (including inherited `#[ContentEntityKeys]`) and fills defaults before calling `EntityBase`. Your app code can keep using `new Todo(['title' => '…'])`.
 
 **Copy this code:**
 
@@ -50,48 +52,14 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use Waaseyaa\Entity\Attribute\ContentEntityKeys;
+use Waaseyaa\Entity\Attribute\ContentEntityType;
 use Waaseyaa\Entity\ContentEntityBase;
 
-/**
- * One todo line item. The framework loads rows through ContentEntityBase::fromStorage(),
- * which passes values, entityTypeId, entityKeys, and fieldDefinitions—your
- * constructor must be compatible (same shape as `ContentEntityBase`); use defaults
- * for app code that calls `new Todo([...])` with only field values.
- */
+#[ContentEntityType(id: 'todo')]
+#[ContentEntityKeys(label: 'title')]
 class Todo extends ContentEntityBase
 {
-    /** The machine name of this type — must match `id` in `config/entity-types.php` (next step). */
-    protected string $entityTypeId = 'todo';
-
-    /**
-     * Which field names in storage correspond to “id”, “uuid”, and the display title.
-     * @var array<string, string>
-     */
-    protected array $entityKeys = [
-        'id' => 'id',
-        'uuid' => 'uuid',
-        'label' => 'title', // “label” in APIs/UI maps to the `title` field
-    ];
-
-    public function __construct(
-        array $values = [],
-        string $entityTypeId = '',
-        array $entityKeys = [],
-        array $fieldDefinitions = [],
-    ) {
-        if ($entityTypeId === '') {
-            $entityTypeId = 'todo';
-        }
-        if ($entityKeys === []) {
-            $entityKeys = [
-                'id' => 'id',
-                'uuid' => 'uuid',
-                'label' => 'title',
-            ];
-        }
-        parent::__construct($values, $entityTypeId, $entityKeys, $fieldDefinitions);
-    }
-
     public function isCompleted(): bool
     {
         return (bool) $this->get('completed');
@@ -105,9 +73,9 @@ class Todo extends ContentEntityBase
 }
 ```
 
-**In plain terms:** the `$entityKeys` table is wiring—think “which column is the id, which is the title,” not business logic. The helper methods keep “mark complete / undo” on the `Todo` object itself, which keeps controllers small later.
+**In plain terms:** metadata lives on the **class** as PHP 8 attributes. The `EntityType` you register in config still carries the authoritative field list and keys for storage and JSON:API—`EntityTypeManager` expects those keys to **match** the resolved class metadata (sorted comparison). Keep them in sync when you change either side.
 
-> **Deeper reading (optional):** Hydration calls `ContentEntityBase::fromStorage($values, $context)` on your class, which in turn `new`’s the entity with **named** arguments (including `entityTypeId` and `entityKeys`). A subclass constructor that only accepts `array $values` will not match and will error at load time. The [Entity System](../core/entity-system.md) guide covers the full `EntityType` and storage story.
+> **Deeper reading:** Hydration calls `ContentEntityBase::fromStorage()` with a context object; the default constructor path accepts `values` plus optional overrides. The canonical framework spec for SSR dispatch is [app-controller-invocation](https://github.com/waaseyaa/framework/blob/main/docs/specs/app-controller-invocation.md). The [Entity system](../core/entity-system.md) guide covers `EntityType`, attributes, and storage.
 
 ## 2. Register the entity type
 
@@ -156,6 +124,10 @@ return [
 
 Create `src/Provider/TodoServiceProvider.php`. A **service provider** is a single place to register your routes and (in larger apps) services. This tutorial only needs **routes**—one URL to show the list, and a few `POST` URLs to create, toggle, and delete.
 
+`entityParameter('todo', 'todo')` tells the router that `{todo}` is an **entity** segment (type `todo`). The SSR **app-controller invoker** will load the row and pass a `Todo` instance into any action parameter typed as `Todo`.
+
+Optional **`bind('todo', Todo::class)`** adds an extra check after load: the concrete class must satisfy the binding (useful when multiple classes implement the same entity type edge case).
+
 ```php
 <?php
 
@@ -179,14 +151,12 @@ class TodoServiceProvider extends ServiceProvider
         WaaseyaaRouter $router,
         ?\Waaseyaa\Entity\EntityTypeManager $entityTypeManager = null,
     ): void {
-        // GET /todos — list page (Twig in step 4, controller in step 5).
         $router->addRoute('todo.list', RouteBuilder::create('/todos')
             ->controller('App\Controller\TodoController::list')
             ->methods('GET')
-            ->allowAll() // public for this walkthrough; lock down in production
+            ->allowAll()
             ->build());
 
-        // POST /todos — form fields: `title`, `priority`
         $router->addRoute('todo.create', RouteBuilder::create('/todos')
             ->controller('App\Controller\TodoController::create')
             ->methods('POST')
@@ -194,10 +164,10 @@ class TodoServiceProvider extends ServiceProvider
             ->csrfExempt() // tutorial only — prefer real CSRF in production
             ->build());
 
-        // POST /todos/{todo}/toggle — {todo} id is resolved to a `Todo` for the controller
         $router->addRoute('todo.toggle', RouteBuilder::create('/todos/{todo}/toggle')
             ->controller('App\Controller\TodoController::toggle')
-            ->entityParameter('todo', 'todo') // path name `todo` + entity type id `todo`
+            ->entityParameter('todo', 'todo')
+            ->bind('todo', \App\Entity\Todo::class)
             ->methods('POST')
             ->allowAll()
             ->csrfExempt()
@@ -206,6 +176,7 @@ class TodoServiceProvider extends ServiceProvider
         $router->addRoute('todo.delete', RouteBuilder::create('/todos/{todo}/delete')
             ->controller('App\Controller\TodoController::delete')
             ->entityParameter('todo', 'todo')
+            ->bind('todo', \App\Entity\Todo::class)
             ->methods('POST')
             ->allowAll()
             ->csrfExempt()
@@ -213,8 +184,6 @@ class TodoServiceProvider extends ServiceProvider
     }
 }
 ```
-
-`entityParameter('todo', 'todo')` means: “the `{todo}` piece of the path is a **todo** id; load the entity and pass it into the controller method as `$todo`.”
 
 ### Register the provider in Composer
 
@@ -236,7 +205,6 @@ The HTTP kernel only loads service providers you list in **`composer.json`**. A 
 After adding or changing providers, refresh compiled discovery data:
 
 ```bash
-# Rebuild the compiled manifest (providers, policies, and similar) after changes.
 php vendor/bin/waaseyaa optimize:manifest
 ```
 
@@ -319,9 +287,16 @@ Create `templates/todo/list.html.twig`:
 
 ## 5. Create the controller
 
-Create `src/Controller/TodoController.php`. The job here is small: read the request, get **storage** for the `todo` type, call **save** / **delete**, and return a **Response** (Twig HTML or a redirect). No heredoc HTML.
+Create `src/Controller/TodoController.php`. SSR **app controllers** registered as `Class::method` strings are dispatched through `Waaseyaa\SSR\SsrPageHandler::dispatchAppController`, which uses **`AppControllerMethodInvoker`** to build action arguments:
 
-**App controller entry point:** routes that use a `Class::method` string (as in this tutorial) are handled by the SSR app-controller pipeline. The dispatcher calls **each** action method with **four** arguments: `(array $params, array $query, AccountInterface $account, Request $httpRequest)`—not action-only type hints. Use `$httpRequest` for form and body input; **path** parameters appear in **`$params`**. For `->entityParameter('todo', 'todo')`, the matched `{todo}` segment is still the **string (or int) id** in this pipeline—it is **not** automatically upcast to a `Todo` object—so the controller should **load** the entity from storage (see `resolveRouteTodo` below) or a future central param converter.
+- **Services** (constructor): same allowlist as before (`EntityTypeManagerInterface`, `Twig\Environment`, …).
+- **Action parameters**: every parameter must have a **named type** (PHP 8.4). The invoker binds:
+  - **Entities** — parameters whose type implements `EntityInterface`, when the route declares `entity:{type}` for a matching path key (after `entityParameter()`). The row is **loaded for you**; missing id → **404**, wrong class after load → **500** (`AppControllerTypeMismatchException`).
+  - **`Symfony\Component\HttpFoundation\Request`** — the current request (form body, query, …).
+  - **Scalars / backed enums** — from route attributes; invalid values → **400** (`InvalidAppControllerArgumentException`).
+  - **`#[MapRoute]` / `#[MapQuery]`** — opt-in bags for the **entire** route params or query arrays when you really need them (strict mode discourages implicit “grab everything” signatures).
+
+The legacy **`(array $params, array $query, AccountInterface $account, Request $request)`** four-argument contract is **removed**—do not use it in new code.
 
 ```php
 <?php
@@ -335,30 +310,21 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Twig\Environment;
-use Waaseyaa\Access\AccountInterface;
 use Waaseyaa\Entity\EntityTypeManagerInterface;
 
 /**
  * Web requests only: delegate domain rules to `Todo` and keep responses simple.
  * HTML comes from `templates/todo/*.twig` (step 4).
  */
-class TodoController
+final class TodoController
 {
     public function __construct(
         private readonly EntityTypeManagerInterface $entityTypeManager,
         private readonly Environment $twig,
     ) {}
 
-    /**
-     * @param array<string, mixed> $params
-     * @param array<string, mixed> $query
-     */
-    public function list(
-        array $params,
-        array $query,
-        AccountInterface $account,
-        Request $httpRequest,
-    ): Response {
+    public function list(): Response
+    {
         $storage = $this->entityTypeManager->getStorage('todo');
         $todos = $storage->loadMultiple();
 
@@ -374,17 +340,9 @@ class TodoController
         return new Response($html);
     }
 
-    /**
-     * @param array<string, mixed> $params
-     * @param array<string, mixed> $query
-     */
-    public function create(
-        array $params,
-        array $query,
-        AccountInterface $account,
-        Request $httpRequest,
-    ): Response {
-        $title = trim((string) $httpRequest->request->get('title', ''));
+    public function create(Request $request): Response
+    {
+        $title = trim((string) $request->request->get('title', ''));
         if ($title === '') {
             return new RedirectResponse('/todos');
         }
@@ -393,7 +351,7 @@ class TodoController
         $todo = new Todo([
             'title' => $title,
             'completed' => false,
-            'priority' => $httpRequest->request->get('priority', 'normal'),
+            'priority' => $request->request->get('priority', 'normal'),
         ]);
         $todo->enforceIsNew(); // first save = INSERT, not UPDATE
         $storage->save($todo);
@@ -401,70 +359,28 @@ class TodoController
         return new RedirectResponse('/todos');
     }
 
-    /**
-     * @param array<string, mixed> $params
-     * @param array<string, mixed> $query
-     */
-    public function toggle(
-        array $params,
-        array $query,
-        AccountInterface $account,
-        Request $httpRequest,
-    ): Response {
-        $todo = $this->resolveRouteTodo($params);
-        if ($todo === null) {
-            return new RedirectResponse('/todos');
-        }
-
-        $todo->toggleCompleted();
-        $storage = $this->entityTypeManager->getStorage('todo');
-        $storage->save($todo);
-
-        return new RedirectResponse('/todos');
-    }
-
-    /**
-     * @param array<string, mixed> $params
-     * @param array<string, mixed> $query
-     */
-    public function delete(
-        array $params,
-        array $query,
-        AccountInterface $account,
-        Request $httpRequest,
-    ): Response {
-        $todo = $this->resolveRouteTodo($params);
-        if ($todo === null) {
-            return new RedirectResponse('/todos');
-        }
-
-        $storage = $this->entityTypeManager->getStorage('todo');
-        $storage->delete([$todo]);
-
-        return new RedirectResponse('/todos');
-    }
-
-    /** @param array<string, mixed> $params */
-    private function resolveRouteTodo(array $params): ?Todo
+    public function toggle(Todo $todo): Response
     {
-        $raw = $params['todo'] ?? null;
-        if ($raw instanceof Todo) {
-            return $raw;
-        }
-        if ((!is_int($raw) && !is_string($raw)) || (is_string($raw) && $raw === '')) {
-            return null;
-        }
+        $todo->toggleCompleted();
+        $this->entityTypeManager->getStorage('todo')->save($todo);
 
-        $loaded = $this->entityTypeManager->getStorage('todo')->load($raw);
+        return new RedirectResponse('/todos');
+    }
 
-        return $loaded instanceof Todo ? $loaded : null;
+    public function delete(Todo $todo): Response
+    {
+        $this->entityTypeManager->getStorage('todo')->delete([$todo]);
+
+        return new RedirectResponse('/todos');
     }
 }
 ```
 
-`toggle` and `delete` use **`resolveRouteTodo`** so a **string id** from the URL (the normal case) is **loaded** into a `Todo` before save/delete. If the id is invalid, the method redirects home without changing data.
+**Why no manual `load()` on toggle/delete?** The invoker resolved `{todo}` to a `Todo` using `EntityTypeManagerInterface::getStorage('todo')->load($rawId)` before your method runs. Invalid or unknown ids surface as **404** automatically—you do not need a private `resolveRouteTodo()` helper in application code.
 
 **Why `enforceIsNew()` on create?** You set field values and then save; the framework must know you mean a **new** row. Calling `enforceIsNew()` means “treat the next save as an insert.”
+
+**Strict mode reminder:** with strict app-controller mode (the default), your `Todo` class **must** declare `#[ContentEntityType]` so the binder can resolve the entity type id for `Todo` parameters. See [Routing guide](../core/routing-guide.md) and the framework spec linked above.
 
 ## 5.1. Add an access policy (JSON:API)
 
@@ -533,7 +449,7 @@ Open [http://localhost:8080/todos](http://localhost:8080/todos). You should get 
 3. **Done** / **Undo** to toggle
 4. **Delete** to remove
 
-You have the full in-browser flow: **entity** → **config** → **routes** → **Twig** → **controller**.
+You have the full in-browser flow: **entity** → **config** → **routes** → **Twig** → **typed controller**.
 
 ## 7. Add the JSON:API endpoint
 
@@ -591,7 +507,7 @@ The browser and the API both read the same database—refresh `/todos` after a s
 
 ## What you built
 
-You added a `Todo` **entity** and **fields**, registered a **type**, **routes** for the UI, **Twig** for markup, a thin **controller** (using the app-controller `($params, $query, $account, $request)` entry point), an **access policy** so **JSON:API** can list and mutate todos in line with the web UI, and (for free beyond that wiring) a **JSON:API** surface. That is the day-to-day Waaseyaa shape: model first, then route, then view, then wire HTTP and access.
+You added a `Todo` **entity** (class-level **attributes** for type id and keys), **fields** in `EntityType`, registered the **type**, **routes** with entity segments and optional **`bind()`**, **Twig** for markup, a thin **typed SSR controller** (no `$params` / `$query`, no manual entity loading for `{todo}`), an **access policy** so **JSON:API** can list and mutate todos in line with the web UI, and (for free beyond that wiring) a **JSON:API** surface. That is the day-to-day Waaseyaa shape: model first, then route, then view, then wire HTTP and access.
 
 ## Optional: production-style next steps
 
@@ -601,6 +517,6 @@ You added a `Todo` **entity** and **fields**, registered a **type**, **routes** 
 ## Next steps
 
 - **[Core Concepts](./concepts.md)** — kernel, providers, config in one place
-- **[Entity System](../core/entity-system.md)** — field types, storage, and more
-- **[Routing Guide](../core/routing-guide.md)** — permissions, middleware, `RouteBuilder` details
+- **[Entity System](../core/entity-system.md)** — field types, storage, attributes, strict registration
+- **[Routing Guide](../core/routing-guide.md)** — permissions, middleware, `RouteBuilder`, typed app controllers
 - **[Access Control](../access/access-control.md)** — the deny-by-default model in depth
