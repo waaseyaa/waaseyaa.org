@@ -10,6 +10,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\Routing\RequestContext;
 use Waaseyaa\Database\DBALDatabase;
+use Waaseyaa\Entity\Attribute\ContentEntityKeys;
+use Waaseyaa\Entity\Attribute\ContentEntityType;
 use Waaseyaa\Entity\ContentEntityBase;
 use Waaseyaa\Entity\EntityType;
 use Waaseyaa\Entity\EntityTypeInterface;
@@ -267,20 +269,18 @@ final class TodoAppTest extends TestCase
  * This is the exact class from the tutorial, placed here so the test
  * validates the same code the reader writes.
  */
+#[ContentEntityType(id: 'todo')]
+#[ContentEntityKeys(id: 'id', uuid: 'uuid', label: 'title')]
 class TodoEntity extends ContentEntityBase
 {
-    protected string $entityTypeId = 'todo';
-
-    /** @var array<string, string> */
-    protected array $entityKeys = [
-        'id' => 'id',
-        'uuid' => 'uuid',
-        'label' => 'title',
-    ];
-
-    public function __construct(array $values = [])
+    public function __construct(
+        array $values = [],
+        string $entityTypeId = '',
+        array $entityKeys = [],
+        array $fieldDefinitions = [],
+    )
     {
-        parent::__construct($values, $this->entityTypeId, $this->entityKeys);
+        parent::__construct($values, $entityTypeId, $entityKeys, $fieldDefinitions);
     }
 
     public function isCompleted(): bool

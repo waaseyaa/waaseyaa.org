@@ -23,7 +23,7 @@ final class DocsController
         $this->guidesPath = $basePath . '/docs/guides';
     }
 
-    public function landing(): Response
+    public function landing(array $params = [], array $query = []): Response
     {
         $index = $this->getIndex();
 
@@ -33,8 +33,12 @@ final class DocsController
         ]));
     }
 
-    public function category(string $category): Response
+    public function category(string|array $category, mixed ...$rest): Response
     {
+        if (is_array($category)) {
+            $category = (string) ($category['category'] ?? '');
+        }
+
         $index = $this->getIndex();
 
         if (!isset($index[$category])) {
@@ -55,8 +59,16 @@ final class DocsController
         ]));
     }
 
-    public function page(string $category, string $slug): Response
+    public function page(string|array $category, mixed ...$rest): Response
     {
+        $slug = null;
+        if (is_array($category)) {
+            $slug = (string) ($category['slug'] ?? '');
+            $category = (string) ($category['category'] ?? '');
+        } else {
+            $slug = isset($rest[0]) ? (string) $rest[0] : '';
+        }
+
         $index = $this->getIndex();
 
         if (!isset($index[$category])) {
