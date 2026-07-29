@@ -9,41 +9,43 @@ The entity system is the heart of Waaseyaa. It provides a structured, typed cont
 
 ## Entity Type Definitions
 
-Every entity in Waaseyaa is described by an `EntityType`. This is a readonly value object that declares the entity's structure and capabilities:
+Every entity in Waaseyaa is described by an `EntityType`, a readonly value object that declares the entity's structure and capabilities. For content entities you do not construct it by hand — the entity class declares its own metadata with attributes, and `EntityType::fromClass()` reflects them into the definition:
 
 ```php
+use Waaseyaa\Entity\Attribute\ContentEntityKeys;
+use Waaseyaa\Entity\Attribute\ContentEntityType;
+use Waaseyaa\Entity\Attribute\Field;
+use Waaseyaa\Entity\ContentEntityBase;
 use Waaseyaa\Entity\EntityType;
+use Waaseyaa\Entity\FieldReadLevel;
 
-new EntityType(
-    id: 'article',
-    label: 'Article',
-    class: App\Entity\Article::class,
-    storageClass: '', // Uses default SQL storage
-    keys: [
-        'id' => 'id',
-        'uuid' => 'uuid',
-        'label' => 'title',
-        'bundle' => 'bundle',
-        'revision' => 'revision_id',
-        'langcode' => 'langcode',
-    ],
+#[ContentEntityType(id: 'article', label: 'Article')]
+#[ContentEntityKeys(label: 'title', bundle: 'bundle', revision: 'revision_id', langcode: 'langcode')]
+class Article extends ContentEntityBase
+{
+    #[Field(label: 'Title', required: true, read: FieldReadLevel::Public)]
+    public string $title = '';
+
+    #[Field(type: 'text', label: 'Body', read: FieldReadLevel::Public)]
+    public ?string $body = null;
+
+    #[Field(type: 'entity_reference', label: 'Category', settings: ['target_type' => 'taxonomy_term'], read: FieldReadLevel::Public)]
+    public ?int $category = null;
+}
+
+$articleType = EntityType::fromClass(
+    Article::class,
     revisionable: true,
     translatable: true,
     bundleEntityType: 'article_type',
-    constraints: [],
-    fieldDefinitions: [
-        'title' => ['type' => 'string', 'label' => 'Title', 'required' => true],
-        'body' => ['type' => 'text', 'label' => 'Body'],
-        'category' => ['type' => 'entity_reference', 'label' => 'Category'],
-    ],
 );
 ```
 
-This defines an article entity type with revision tracking, translations, bundles, and three fields.
+This defines an article entity type with revision tracking, translations, bundles, and three fields. The `EntityType` constructor still exists for definitions that have no field-attribute metadata — config entity types like `node_type` are registered that way — but its field-definitions slot is `@internal`: application code declares fields with `#[Field]` attributes, never by passing arrays to the constructor.
 
 ### Entity Keys
 
-The `keys` array maps logical roles to column names:
+`#[ContentEntityKeys]` maps logical roles to field names:
 
 | Key | Purpose | Example |
 |---|---|---|
@@ -107,8 +109,6 @@ Extends `EntityBase` with fieldable capabilities. Use this for user-created cont
 abstract class ContentEntityBase extends EntityBase
     implements ContentEntityInterface
 {
-    protected array $fieldDefinitions = [];
-
     public function hasField(string $name): bool;
     public function get(string $name): mixed;
     public function set(string $name, mixed $value): static;
@@ -160,14 +160,22 @@ Each method serves a specific purpose: `schema()` defines database columns, `def
 
 ### Built-in Field Types
 
-| Type | Item Class | Schema Type | Description |
-|---|---|---|---|
-| `string` | `StringItem` | `VARCHAR` | Short text (titles, names) |
-| `text` | `TextItem` | `TEXT` | Long text with optional format |
-| `integer` | `IntegerItem` | `INTEGER` | Whole numbers |
-| `float` | `FloatItem` | `FLOAT` | Decimal numbers |
-| `boolean` | `BooleanItem` | `BOOLEAN` | True/false flags |
-| `entity_reference` | `EntityReferenceItem` | `INTEGER` | Reference to another entity |
+| Type | Item Class | Description |
+|---|---|---|
+| `string` | `StringItem` | Short text (titles, names) |
+| `text` | `TextItem` | Long text with optional format |
+| `integer` | `IntegerItem` | Whole numbers |
+| `float` | `FloatItem` | Floating-point numbers |
+| `decimal` | `DecimalItem` | Exact decimal numbers (money, quantities) |
+| `boolean` | `BooleanItem` | True/false flags |
+| `date` / `datetime` | `DateItem` / `DateTimeItem` | Calendar dates and timestamps |
+| `email` | `EmailItem` | Validated email addresses |
+| `link` | `LinkItem` | URLs with optional link text |
+| `enum` | `EnumItem` | Backed-enum values (inferred from enum-typed properties) |
+| `list` | `ListItem` | Multi-value lists |
+| `json` | `JsonItem` | Arbitrary structured data |
+| `file` / `image` | `FileItem` / `ImageItem` | File and image references |
+| `entity_reference` | `EntityReferenceItem` | Reference to another entity |
 
 ### Field Items and Field Lists
 
@@ -192,68 +200,65 @@ if ($article->hasField('category')) {
 
 These methods work on any content entity. The field system validates types at the storage layer.
 
-### Define Fields on Entity Types
+### Define Fields with Attributes
 
-You declare fields in the `fieldDefinitions` parameter of `EntityType`:
+You declare fields with `#[Field]` attributes on public typed properties of the entity class:
 
 ```php
-'fieldDefinitions' => [
-    'title' => [
-        'type' => 'string',
-        'label' => 'Title',
-        'required' => true,
-    ],
-    'body' => [
-        'type' => 'text',
-        'label' => 'Body',
-    ],
-    'views_count' => [
-        'type' => 'integer',
-        'label' => 'View Count',
-    ],
-    'is_featured' => [
-        'type' => 'boolean',
-        'label' => 'Featured',
-    ],
-    'author' => [
-        'type' => 'entity_reference',
-        'label' => 'Author',
-    ],
-],
+#[Field(label: 'Title', required: true, read: FieldReadLevel::Public)]
+public string $title = '';
+
+#[Field(type: 'text', label: 'Body', read: FieldReadLevel::Public)]
+public ?string $body = null;
+
+#[Field(label: 'View Count', read: FieldReadLevel::Public)]
+public int $viewsCount = 0;
+
+#[Field(label: 'Featured', read: FieldReadLevel::Public)]
+public bool $isFeatured = false;
+
+#[Field(type: 'entity_reference', label: 'Author', settings: ['target_type' => 'user'], read: FieldReadLevel::Protected)]
+public ?int $author = null;
 ```
 
-Each field definition specifies a type, a label, and optional constraints like `required`.
+When `type:` is omitted, it is inferred from the PHP property type (`string` → `string`, `int` → `integer`, `bool` → `boolean`, a backed enum → `enum`). Beyond type and label, an attribute can declare:
+
+- **`read:`** — the field's read level (`FieldReadLevel::Public`, `Protected`, or `Internal`). Waaseyaa is fail-closed: fields without a read level are internal and cannot be read by application code. `Protected` reads require an account read context.
+- **`required:`, `default:`, `settings:`** — validation and configuration.
+- **`stored:`** — how the field persists: `FieldStorage::Column` materializes a dedicated SQL column; `FieldStorage::Data` keeps the value in the entity's JSON data blob.
+- **`translatable:`, `revisionable:`** — per-field translation and revision participation.
 
 ## Entity Storage
 
-The `waaseyaa/entity-storage` package provides SQL-backed storage for entities. You access storage handlers through the `EntityTypeManager`:
+The `waaseyaa/entity-storage` package provides SQL-backed persistence for entities. The public API is the **entity repository**, which you get from the `EntityTypeManager`:
 
 ```php
-// Get the storage handler
-$storage = $entityTypeManager->getStorage('article');
+// Get the repository
+$repository = $entityTypeManager->getRepository('article');
 
 // CRUD operations
-$article = $storage->load(42);
-$articles = $storage->loadMultiple([1, 2, 3]);
-$storage->save($article);
-$storage->delete($article);
+$article = $repository->create(['title' => 'My Article']); // new, unsaved, defaults applied
+$repository->save($article);
+
+$article  = $repository->find('42');
+$articles = $repository->findMany([1, 2, 3]);
+$latest   = $repository->findBy([], orderBy: ['id' => 'DESC'], limit: 10);
+
+$repository->delete($article);
 ```
 
-These four operations cover the full entity lifecycle: load, load multiple, save, and delete.
+The repository handles entity hydration, language fallback, validation, and pre/post save and delete domain events, and delegates raw I/O to a storage driver. For queries `findBy()` cannot express, `getQuery()` returns an access-checked entity query builder — bind the acting account with `setAccount()` before `execute()`, or opt out explicitly with `accessCheck(false)` in trusted system contexts.
 
 ### Save New vs Existing Entities
 
-When saving an entity, the storage handler checks whether it already has an ID:
+Entities built with `$repository->create()` are marked new and `save()` performs an `INSERT`; entities loaded from storage are not, and `save()` performs an `UPDATE`.
 
-- If the entity has no ID, it performs an `INSERT`
-- If the entity has an ID, it performs an `UPDATE`
-
-To force an `INSERT` on an entity with a pre-set ID (e.g., imported data), call `enforceIsNew()`:
+To force an `INSERT` on a hand-constructed entity with a pre-set ID (e.g., imported data), call `enforceIsNew()`:
 
 ```php
 $article = new Article(['id' => 100, 'title' => 'Imported Article']);
 $article->enforceIsNew();
-$storage->save($article); // Forces INSERT
+$repository->save($article); // Forces INSERT
 ```
 
 This is useful when importing data with known IDs from another system.
@@ -270,22 +275,17 @@ Use `php vendor/bin/waaseyaa schema:check` when you need to detect drift between
 
 ## Revisions
 
-Entity types with `revisionable: true` track a full history of changes. Each save creates a new revision:
+Entity types with `revisionable: true` track a full history of changes. Each save creates a new revision. Declare the revision key on the class and pass the flag to `fromClass()`:
 
 ```php
-new EntityType(
-    id: 'article',
-    label: 'Article',
-    class: App\Entity\Article::class,
-    keys: [
-        'id' => 'id',
-        'uuid' => 'uuid',
-        'label' => 'title',
-        'revision' => 'revision_id',
-    ],
-    revisionable: true,
-);
+#[ContentEntityType(id: 'article', label: 'Article')]
+#[ContentEntityKeys(label: 'title', revision: 'revision_id')]
+class Article extends ContentEntityBase { /* ... */ }
+
+EntityType::fromClass(Article::class, revisionable: true);
 ```
+
+A revisionable entity type must declare a non-empty `revision` key — the definition is rejected otherwise. The repository exposes revision history via `loadRevision()` and copy-forward rollback via `rollback()`.
 
 Revisionable entities implement `RevisionableInterface`, providing access to revision metadata and history. Combined with the `waaseyaa/workflows` package, revisions power editorial workflows with draft, review, and published states.
 
@@ -294,18 +294,11 @@ Revisionable entities implement `RevisionableInterface`, providing access to rev
 Entity types with `translatable: true` support multiple languages. Each translation is a separate entity object:
 
 ```php
-new EntityType(
-    id: 'article',
-    label: 'Article',
-    class: App\Entity\Article::class,
-    keys: [
-        'id' => 'id',
-        'uuid' => 'uuid',
-        'label' => 'title',
-        'langcode' => 'langcode',
-    ],
-    translatable: true,
-);
+#[ContentEntityType(id: 'article', label: 'Article')]
+#[ContentEntityKeys(label: 'title', langcode: 'langcode')]
+class Article extends ContentEntityBase { /* ... */ }
+
+EntityType::fromClass(Article::class, translatable: true);
 ```
 
 Translatable entities implement `TranslatableInterface`. The language is negotiated at the routing layer via `UrlPrefixNegotiator` or `AcceptHeaderNegotiator` from the routing package.
@@ -320,27 +313,22 @@ interface EntityTypeManagerInterface
     /** Get the definition for an entity type */
     public function getDefinition(string $entityTypeId): EntityType;
 
-    /** Get the storage handler for an entity type */
-    public function getStorage(string $entityTypeId): EntityStorageInterface;
+    /** Get the repository for an entity type */
+    public function getRepository(string $entityTypeId): EntityRepositoryInterface;
 
     /** Get all registered entity type definitions */
     public function getDefinitions(): array;
 }
 ```
 
-You use this interface to look up entity type definitions, get storage handlers, and list all registered types.
+You use this interface to look up entity type definitions, get repositories, and list all registered types. (A `getStorage()` seam also exists for entity types that bring their own `EntityStorageInterface` implementation via `storageClass`; first-party persistence goes through repositories.)
 
 Service providers register entity types using the `entityType()` helper method:
 
 ```php
 public function register(): void
 {
-    $this->entityType(new EntityType(
-        id: 'article',
-        label: 'Article',
-        class: Article::class,
-        keys: ['id' => 'id', 'uuid' => 'uuid', 'label' => 'title'],
-    ));
+    $this->entityType(EntityType::fromClass(Article::class));
 }
 ```
 

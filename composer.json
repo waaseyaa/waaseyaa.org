@@ -36,7 +36,7 @@
         "waaseyaa/queue": "^0.1",
         "waaseyaa/routing": "^0.1",
         "waaseyaa/search": "^0.1",
-        "waaseyaa/ssr": "v0.1.0-alpha.157",
+        "waaseyaa/ssr": "dev-main",
         "waaseyaa/state": "^0.1",
         "waaseyaa/taxonomy": "^0.1",
         "waaseyaa/telescope": "^0.1",

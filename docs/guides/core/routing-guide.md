@@ -116,7 +116,7 @@ The first argument to `addRoute()` is a unique route name used for URL generatio
 `RouteBuilder::entityParameter($name, $entityTypeId)` stores metadata on the Symfony `Route` so the path placeholder `{name}` is treated as **`entity:{entityTypeId}`**. Extraction still happens during routing, but **loading** happens later when Waaseyaa dispatches an SSR **app controller** (`Waaseyaa\SSR\SsrPageHandler::dispatchAppController`):
 
 1. The matched route supplies raw attribute values (e.g. `{ "article" => "42" }`).
-2. `AppControllerMethodInvoker` sees an action parameter typed as `Article` (implements `EntityInterface`) and loads via `EntityTypeManagerInterface::getStorage($entityTypeId)->load($rawId)`.
+2. `AppControllerMethodInvoker` sees an action parameter typed as `Article` (implements `EntityInterface`) and loads via `EntityTypeManagerInterface::getRepository($entityTypeId)->find($rawId)`.
 3. A successful load passes the entity instance into your method; failures become HTTP errors (see **Typed app controllers** below).
 
 Optional **`->bind('article', Article::class)`** records `_waaseyaa_app_bindings['article'] = Article::class` so, after load, Waaseyaa verifies `is_a($entity, Article::class)`—handy when multiple PHP classes could back the same storage row.

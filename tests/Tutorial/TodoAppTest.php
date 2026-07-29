@@ -12,12 +12,16 @@ use Symfony\Component\Routing\RequestContext;
 use Waaseyaa\Database\DBALDatabase;
 use Waaseyaa\Entity\Attribute\ContentEntityKeys;
 use Waaseyaa\Entity\Attribute\ContentEntityType;
+use Waaseyaa\Entity\Attribute\Field;
 use Waaseyaa\Entity\ContentEntityBase;
 use Waaseyaa\Entity\EntityType;
 use Waaseyaa\Entity\EntityTypeInterface;
 use Waaseyaa\Entity\EntityTypeManager;
-use Waaseyaa\EntityStorage\SqlEntityStorage;
+use Waaseyaa\Entity\FieldReadLevel;
+use Waaseyaa\EntityStorage\Connection\SingleConnectionResolver;
+use Waaseyaa\EntityStorage\Driver\SqlStorageDriver;
 use Waaseyaa\EntityStorage\SqlSchemaHandler;
+use Waaseyaa\EntityStorage\Testing\V2EntityRepositoryFactory;
 use Waaseyaa\Routing\RouteBuilder;
 use Waaseyaa\Routing\WaaseyaaRouter;
 
@@ -39,45 +43,27 @@ final class TodoAppTest extends TestCase
         $database = DBALDatabase::createSqlite();
         $dispatcher = new EventDispatcher();
 
-        // Tutorial Step 2: Register the entity type with field definitions.
-        $todoType = new EntityType(
-            id: 'todo',
-            label: 'Todo',
-            class: TodoEntity::class,
-            keys: [
-                'id' => 'id',
-                'uuid' => 'uuid',
-                'label' => 'title',
-            ],
-            fieldDefinitions: [
-                'title' => [
-                    'type' => 'string',
-                    'label' => 'Title',
-                    'required' => true,
-                ],
-                'completed' => [
-                    'type' => 'boolean',
-                    'label' => 'Completed',
-                ],
-                'priority' => [
-                    'type' => 'string',
-                    'label' => 'Priority',
-                ],
-            ],
-        );
+        // Tutorial Step 2: derive the entity type from the class attributes.
+        $todoType = EntityType::fromClass(TodoEntity::class);
 
         $this->entityTypeManager = new EntityTypeManager(
             $dispatcher,
-            function (EntityTypeInterface $entityType) use ($database, $dispatcher) {
-                // Create schema (table) for the entity type.
-                $schemaHandler = new SqlSchemaHandler($entityType, $database);
+            repositoryFactory: function (string $entityTypeId, EntityTypeInterface $definition) use ($database, $dispatcher) {
+                // Create schema (table) for the entity type. Fields live in the
+                // entity's data blob under the default sql-blob backend, so the
+                // base table is all we need.
+                $schemaHandler = new SqlSchemaHandler($definition, $database);
                 $schemaHandler->ensureTable();
-                $schemaHandler->addFieldColumns([
-                    'completed' => ['type' => 'int', 'not null' => true, 'default' => 0],
-                    'priority' => ['type' => 'varchar', 'length' => 64, 'not null' => true, 'default' => 'normal'],
-                ]);
 
-                return new SqlEntityStorage($entityType, $database, $dispatcher);
+                $resolver = new SingleConnectionResolver($database);
+                $driver = new SqlStorageDriver($resolver, $definition->getKeys()['id'] ?? 'id');
+
+                return V2EntityRepositoryFactory::createFromSqlStorageDriver(
+                    $definition,
+                    $driver,
+                    $dispatcher,
+                    database: $database,
+                );
             },
         );
         $this->entityTypeManager->registerEntityType($todoType);
@@ -116,20 +102,19 @@ final class TodoAppTest extends TestCase
     #[Test]
     public function create_and_load_todo(): void
     {
-        $storage = $this->entityTypeManager->getStorage('todo');
+        $repository = $this->entityTypeManager->getRepository('todo');
 
-        $todo = new TodoEntity([
+        $todo = $repository->create([
             'title' => 'Call the plumber',
             'completed' => false,
             'priority' => 'high',
         ]);
-        $todo->enforceIsNew();
-        $storage->save($todo);
+        $repository->save($todo);
 
         $id = $todo->id();
         self::assertNotNull($id);
 
-        $loaded = $storage->load($id);
+        $loaded = $repository->find((string) $id);
         self::assertInstanceOf(TodoEntity::class, $loaded);
         self::assertSame('Call the plumber', $loaded->label());
         self::assertSame('high', $loaded->get('priority'));
@@ -138,58 +123,55 @@ final class TodoAppTest extends TestCase
     #[Test]
     public function toggle_persisted_todo(): void
     {
-        $storage = $this->entityTypeManager->getStorage('todo');
+        $repository = $this->entityTypeManager->getRepository('todo');
 
-        $todo = new TodoEntity([
+        $todo = $repository->create([
             'title' => 'Buy groceries',
             'completed' => false,
             'priority' => 'normal',
         ]);
-        $todo->enforceIsNew();
-        $storage->save($todo);
+        $repository->save($todo);
 
         // Toggle to completed (mirrors TodoController::toggle).
         $todo->toggleCompleted();
-        $storage->save($todo);
+        $repository->save($todo);
 
-        $loaded = $storage->load($todo->id());
+        $loaded = $repository->find((string) $todo->id());
         self::assertTrue($loaded->isCompleted());
 
         // Toggle back.
         $loaded->toggleCompleted();
-        $storage->save($loaded);
+        $repository->save($loaded);
 
-        $reloaded = $storage->load($todo->id());
+        $reloaded = $repository->find((string) $todo->id());
         self::assertFalse($reloaded->isCompleted());
     }
 
     #[Test]
     public function delete_todo(): void
     {
-        $storage = $this->entityTypeManager->getStorage('todo');
+        $repository = $this->entityTypeManager->getRepository('todo');
 
-        $todo = new TodoEntity(['title' => 'Temporary task', 'completed' => false]);
-        $todo->enforceIsNew();
-        $storage->save($todo);
+        $todo = $repository->create(['title' => 'Temporary task', 'completed' => false]);
+        $repository->save($todo);
 
         $id = $todo->id();
-        $storage->delete([$todo]);
+        $repository->delete($todo);
 
-        self::assertNull($storage->load($id));
+        self::assertNull($repository->find((string) $id));
     }
 
     #[Test]
     public function load_multiple_todos(): void
     {
-        $storage = $this->entityTypeManager->getStorage('todo');
+        $repository = $this->entityTypeManager->getRepository('todo');
 
         foreach (['First', 'Second', 'Third'] as $title) {
-            $todo = new TodoEntity(['title' => $title, 'completed' => false, 'priority' => 'normal']);
-            $todo->enforceIsNew();
-            $storage->save($todo);
+            $todo = $repository->create(['title' => $title, 'completed' => false, 'priority' => 'normal']);
+            $repository->save($todo);
         }
 
-        $all = $storage->loadMultiple();
+        $all = $repository->findBy([]);
         self::assertCount(3, $all);
     }
 
@@ -269,19 +251,18 @@ final class TodoAppTest extends TestCase
  * This is the exact class from the tutorial, placed here so the test
  * validates the same code the reader writes.
  */
-#[ContentEntityType(id: 'todo')]
-#[ContentEntityKeys(id: 'id', uuid: 'uuid', label: 'title')]
+#[ContentEntityType(id: 'todo', label: 'Todo')]
+#[ContentEntityKeys(label: 'title')]
 class TodoEntity extends ContentEntityBase
 {
-    public function __construct(
-        array $values = [],
-        string $entityTypeId = '',
-        array $entityKeys = [],
-        array $fieldDefinitions = [],
-    )
-    {
-        parent::__construct($values, $entityTypeId, $entityKeys, $fieldDefinitions);
-    }
+    #[Field(label: 'Title', required: true, read: FieldReadLevel::Public)]
+    public string $title = '';
+
+    #[Field(label: 'Completed', read: FieldReadLevel::Public)]
+    public bool $completed = false;
+
+    #[Field(label: 'Priority', read: FieldReadLevel::Public)]
+    public string $priority = 'normal';
 
     public function isCompleted(): bool
     {

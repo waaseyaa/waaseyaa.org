@@ -13,45 +13,46 @@ Waaseyaa's content model is inspired by Drupal but rebuilt with modern PHP. Ever
 
 ### Entity Types
 
-An entity type is a definition that describes a class of entities. You define it with the `EntityType` value object:
+An entity type is a definition that describes a class of entities. For content entities, the definition lives on the entity class itself as PHP attributes, and `EntityType::fromClass()` reflects them into an `EntityType` value object:
 
 ```php
+use Waaseyaa\Entity\Attribute\ContentEntityKeys;
+use Waaseyaa\Entity\Attribute\ContentEntityType;
+use Waaseyaa\Entity\Attribute\Field;
+use Waaseyaa\Entity\ContentEntityBase;
 use Waaseyaa\Entity\EntityType;
+use Waaseyaa\Entity\FieldReadLevel;
 
-$articleType = new EntityType(
-    id: 'article',
-    label: 'Article',
-    class: App\Entity\Article::class,
-    keys: [
-        'id' => 'id',
-        'uuid' => 'uuid',
-        'label' => 'title',
-        'bundle' => 'bundle',
-        'revision' => 'revision_id',
-        'langcode' => 'langcode',
-    ],
+#[ContentEntityType(id: 'article', label: 'Article')]
+#[ContentEntityKeys(label: 'title', bundle: 'bundle', revision: 'revision_id', langcode: 'langcode')]
+class Article extends ContentEntityBase
+{
+    #[Field(label: 'Title', required: true, read: FieldReadLevel::Public)]
+    public string $title = '';
+
+    #[Field(type: 'text', label: 'Body', read: FieldReadLevel::Public)]
+    public ?string $body = null;
+}
+
+$articleType = EntityType::fromClass(
+    Article::class,
     revisionable: true,
     translatable: true,
-    fieldDefinitions: [
-        'title' => ['type' => 'string', 'label' => 'Title', 'required' => true],
-        'body' => ['type' => 'text', 'label' => 'Body'],
-    ],
 );
 ```
 
-This defines an article entity type with revision tracking, translation support, and two fields.
+This defines an article entity type with revision tracking, translation support, and two fields. Field types are inferred from the PHP property types (`string $title` → a `string` field); pass `type:` explicitly when you need something else, like `text` for long-form content.
 
-Key properties:
+Key building blocks:
 
-| Property | Purpose |
+| Piece | Purpose |
 |---|---|
-| `id` | Machine name used throughout the system |
-| `class` | PHP class that extends `EntityBase` |
-| `keys` | Maps logical keys (id, uuid, label) to field names |
-| `revisionable` | Whether this type tracks revision history |
-| `translatable` | Whether this type supports multiple languages |
-| `fieldDefinitions` | Declares the typed fields on this entity |
-| `bundleEntityType` | Optional: the config entity that provides bundles (e.g., `node_type` for `node`) |
+| `#[ContentEntityType]` | Machine id, label, description, and JSON:API opt-in (`api: true`) |
+| `#[ContentEntityKeys]` | Maps logical keys (label, bundle, revision, langcode) to field names; `id` and `uuid` default automatically |
+| `#[Field]` | Marks a public typed property as a persistable field, with label, `required`, and a read level |
+| `EntityType::fromClass()` | Builds the definition, adding options like `revisionable`, `translatable`, or `bundleEntityType` |
+
+Every `#[Field]` declares a **read level** (`FieldReadLevel::Public`, `Protected`, or `Internal`). Waaseyaa is fail-closed: fields without a read level are treated as internal and cannot be read by application code.
 
 ### Content Entities vs Config Entities
 
@@ -125,32 +126,32 @@ The `jsonSchema()` method is what enables the AI packages to automatically gener
 
 ### Entity Lifecycle
 
-You manage entities through storage handlers. Here is the typical lifecycle:
+You manage entities through entity repositories. Here is the typical lifecycle:
 
 ```php
-// Get the storage handler for an entity type
-$storage = $entityTypeManager->getStorage('article');
+// Get the repository for an entity type
+$repository = $entityTypeManager->getRepository('article');
 
-// Create a new entity
-$article = new Article([
+// Create a new entity (unsaved, field defaults applied)
+$article = $repository->create([
     'title' => 'My Article',
     'body' => 'Content here...',
 ]);
-$article->enforceIsNew(); // Force INSERT (not UPDATE)
-$storage->save($article);
+$repository->save($article);
 
 // Load an entity by ID
-$article = $storage->load(1);
+$article = $repository->find('1');
 
 // Update
 $article->set('title', 'Updated Title');
-$storage->save($article);
+$repository->save($article);
 
-// Load multiple
-$articles = $storage->loadMultiple([1, 2, 3]);
+// Load multiple by ID, or query by criteria
+$articles = $repository->findMany([1, 2, 3]);
+$latest = $repository->findBy([], orderBy: ['id' => 'DESC'], limit: 10);
 ```
 
-Call `enforceIsNew()` before saving entities with pre-set IDs to force an `INSERT` rather than an `UPDATE`.
+The repository handles hydration, validation, and domain events, and `getQuery()` gives you an access-checked entity query builder for anything `findBy()` cannot express.
 
 ## Service Providers
 

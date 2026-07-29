@@ -33,12 +33,8 @@ final class DocsController
         ]));
     }
 
-    public function category(string|array $category, mixed ...$rest): Response
+    public function category(string $category): Response
     {
-        if (is_array($category)) {
-            $category = (string) ($category['category'] ?? '');
-        }
-
         $index = $this->getIndex();
 
         if (!isset($index[$category])) {
@@ -59,16 +55,8 @@ final class DocsController
         ]));
     }
 
-    public function page(string|array $category, mixed ...$rest): Response
+    public function page(string $category, string $slug): Response
     {
-        $slug = null;
-        if (is_array($category)) {
-            $slug = (string) ($category['slug'] ?? '');
-            $category = (string) ($category['category'] ?? '');
-        } else {
-            $slug = isset($rest[0]) ? (string) $rest[0] : '';
-        }
-
         $index = $this->getIndex();
 
         if (!isset($index[$category])) {
